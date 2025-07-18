@@ -1,0 +1,25 @@
+# Generated files
+.*
+*~
+*.d
+*.o
+*.asm.o
+*.bin
+*.img
+*.elf
+
+# Do not ignore these dotfiles
+!.gitignore
+!.editorconfig
+!.clang-format
+
+# Build files
+/build
+
+# Cache files
+/.cache
+compile_commands.json
+
+# Other
+/notes
+*.code-workspace
