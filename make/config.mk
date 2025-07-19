@@ -6,7 +6,7 @@ ARCH = x86_64
 EFI_ARCH = X64
 
 # Toggle command output supression
-SUPPRESS = > /dev/null 2> /dev/null
+SUPPRESS = >/dev/null 2>/dev/null
 
 # Build options
 OPTIMIZE = false

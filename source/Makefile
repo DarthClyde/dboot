@@ -30,7 +30,8 @@ CFLAGS =						\
 	-mno-red-zone				\
 	-mno-avx					\
 	-DEFI_FUNCTION_WRAPPER		\
-	-DGNU_EFI_USE_MS_ABI
+	-DGNU_EFI_USE_MS_ABI		\
+	-I $(SRC_DIR)
 
 LDFLAGS = 						\
 	-nostdlib 					\
@@ -40,6 +41,7 @@ LDFLAGS = 						\
 	--warn-common				\
 	--no-undefined				\
 	--fatal-warnings			\
+	-I $(SRC_DIR)				\
 	-T $(LINKER_SCRIPT)
 
 # Add GNU-EFI

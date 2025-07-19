@@ -51,6 +51,7 @@ $(DBOOT_IMG): $(DBOOT_EFI) | $(BUILD_DIR)
 	@ mmd -i $@ ::/EFI
 	@ mmd -i $@ ::/EFI/BOOT
 	@ mcopy -i $@ $^ ::/EFI/BOOT/BOOT$(EFI_ARCH).EFI
+	@ mcopy -i $@ examples/advanced/dboot.conf ::/EFI/DBOOT.CONF
 
 	@ echo -e $(MSG_DONE_IMG)$@
 

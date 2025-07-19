@@ -1,25 +1,54 @@
 #include <efi.h>
 #include <efilib.h>
 
-EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
-{
-	InitializeLib(ImageHandle, SystemTable);
+#include "fs/config.h"
 
+EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
+{
+	EFI_STATUS status;
+
+	EFI_LOADED_IMAGE* loaded_image;
+
+	config_entry_t* config_entries = NULL;
+	UINTN config_entries_count = 0;
+
+	InitializeLib(image, systable);
+
+	// Clear the screen
 	uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
 	uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
 
-	Print(L"Hello from UEFI\n\n");
+	// Print dboot info
+	Print(L"dboot v"DBOOT_VERSION" compiled "__DATE__" at "__TIME__);
+	Print(L"\n\n");
 
-	// Print system information
-	Print(L"UEFI Firmware Vendor: %s\n", ST->FirmwareVendor);
-	Print(L"UEFI Firmware Revision: %d.%d\n",
-		ST->FirmwareRevision >> 16,
-		ST->FirmwareRevision & 0xFFFF
+	// Load the root image
+	status = uefi_call_wrapper(BS->OpenProtocol, 6,
+		image, &LoadedImageProtocol, (VOID**)&loaded_image, image,
+		NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL
 	);
-	Print(L"UEFI Specification Revision: %d.%d\n",
-		ST->Hdr.Revision >> 16,
-		ST->Hdr.Revision & 0xFFFF
-	);
+	if(EFI_ERROR(status))
+	{
+		Print(L"Failed to load root image.");
+		goto err_exit;
+	}
+
+	// Load dboot config
+	status = config_load(&config_entries, &config_entries_count, loaded_image->DeviceHandle);
+	if(EFI_ERROR(status))
+	{
+		Print(L"Failed to load dboot config file.");
+		goto err_exit;
+	}
+	config_debuglog(config_entries, config_entries_count);
+
+	// Hang
+	while(1);
 
 	return EFI_SUCCESS;
+
+err_exit:
+	Print(L"\n\nPress any key to continue...\n");
+	WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
+	return status;
 }
