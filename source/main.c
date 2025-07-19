@@ -10,7 +10,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	EFI_LOADED_IMAGE* loaded_image;
 
 	config_entry_t* config_entries = NULL;
-	UINTN config_entries_count = 0;
+	UINTN config_entries_count     = 0;
 
 	InitializeLib(image, systable);
 
@@ -19,15 +19,14 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
 
 	// Print dboot info
-	Print(L"dboot v"DBOOT_VERSION" compiled "__DATE__" at "__TIME__);
+	Print(L"dboot v" DBOOT_VERSION " compiled "__DATE__
+	      " at "__TIME__);
 	Print(L"\n\n");
 
 	// Load the root image
-	status = uefi_call_wrapper(BS->OpenProtocol, 6,
-		image, &LoadedImageProtocol, (VOID**)&loaded_image, image,
-		NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL
-	);
-	if(EFI_ERROR(status))
+	status = uefi_call_wrapper(BS->OpenProtocol, 6, image, &LoadedImageProtocol,
+	                           (VOID**)&loaded_image, image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load root image.");
 		goto err_exit;
@@ -35,7 +34,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 
 	// Load dboot config
 	status = config_load(&config_entries, &config_entries_count, loaded_image->DeviceHandle);
-	if(EFI_ERROR(status))
+	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load dboot config file.");
 		goto err_exit;
@@ -43,7 +42,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	config_debuglog(config_entries, config_entries_count);
 
 	// Hang
-	while(1);
+	while (1);
 
 	return EFI_SUCCESS;
 

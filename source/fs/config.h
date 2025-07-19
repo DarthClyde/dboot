@@ -3,9 +3,9 @@
 
 #include <efi.h>
 
-#define MAX_NAME_LEN 128
-#define MAX_PATH_LEN 256
-#define MAX_ENTRIES 16
+#define MAX_NAME_LEN     128
+#define MAX_PATH_LEN     256
+#define MAX_ENTRIES      16
 #define CONFIG_FILE_PATH L"\\EFI\\DBOOT.CONF"
 
 typedef enum
