@@ -1,3 +1,6 @@
 [submodule "gnuefi"]
 	path = gnuefi
 	url = https://git.code.sf.net/p/gnu-efi/code
+	branch = master
+	ignore = dirty
+	shallow = true
