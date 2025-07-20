@@ -1,13 +1,15 @@
 #include "video/menu/bootsel.h"
 
 #include <efilib.h>
+
 #include "video/gop.h"
+#include "utils/input.h"
 
 #define DEFAULT_COLOR   EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK)
 #define ACCENT_COLOR    EFI_TEXT_ATTR(EFI_CYAN, EFI_BLACK)
 #define HIGHLIGHT_COLOR EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY)
 
-UINT8 bootsel_show(config_entry_t* entries, UINTN entries_count)
+EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 {
 	EFI_STATUS status                  = EFIERR(99);
 	SIMPLE_TEXT_OUTPUT_INTERFACE* COUT = ST->ConOut;
@@ -17,9 +19,14 @@ UINT8 bootsel_show(config_entry_t* entries, UINTN entries_count)
 	UINTN top                          = 0;
 
 	CHAR16** entry_titles              = NULL;
-	UINT8 selection                    = 0;
 
-	if (!gop_isactive()) return UINT8_MAX;
+	CHAR16* footer                     = NULL;
+	UINT16 footer_strlen               = 0;
+
+	UINT8 selection                    = 0;
+	INT64 boot_timeout                 = 5 * 10;
+
+	if (!gop_isactive()) return BOOTSEL_RET_ERROR;
 
 	// Setup menu
 	uefi_call_wrapper(COUT->Reset, 2, COUT, FALSE);
@@ -118,10 +125,81 @@ UINT8 bootsel_show(config_entry_t* entries, UINTN entries_count)
 			// Print entry title
 			gop_printp((columns - MAX_TITLE_LEN) / 2, top + 4 + i, title);
 		}
+
+		// Draw footer string
+		gop_printpc((columns - footer_strlen) / 2, rows - 1, DEFAULT_COLOR, footer);
+
+		// Handle key events
+		key_t key = input_get_keypress();
+		if (key) boot_timeout = -1;
+		switch (key)
+		{
+			case KEY(0, 'Q'):
+			{
+				status = EFI_ABORTED;
+				goto end;
+			}
+
+			// Move selection up
+			case KEY(SCAN_UP, 0):
+			{
+				if (selection == 0)
+					selection = (entries_count - 1);
+				else
+					selection--;
+				break;
+			}
+
+			// Move selection down
+			case KEY(SCAN_DOWN, 0):
+			{
+				if (selection == (entries_count - 1))
+					selection = 0;
+				else
+					selection++;
+				break;
+			}
+
+			// Move selection to first entry
+			case KEY(SCAN_HOME, 0):
+			{
+				selection = 0;
+				break;
+			}
+
+			// Move selection to last entry
+			case KEY(SCAN_END, 0):
+			{
+				selection = (entries_count - 1);
+				break;
+			}
+		}
+
+		// Update boot timeout
+		if (boot_timeout > 0)
+		{
+			if (footer) FreePool(footer);
+			footer        = PoolPrint(L"Booting in %lld seconds.", (boot_timeout + 10) / 10);
+			footer_strlen = StrLen(footer);
+
+			uefi_call_wrapper(BS->Stall, 1, 100 * 1000);
+			boot_timeout--;
+		}
+		else if (boot_timeout == -1)
+		{
+			// TODO: Clear footer line
+		}
+		else if (boot_timeout == 0)
+		{
+			// TODO: Boot into selected entry
+		}
 	}
 
+end:
 	for (UINTN i = 0; i < entries_count; i++) { FreePool(entry_titles[i]); }
 	if (entry_titles) FreePool(entry_titles);
+	if (footer) FreePool(footer);
 
+	*sel = selection;
 	return status;
 }

@@ -3,6 +3,8 @@
 
 #include "fs/config.h"
 
+#include "utils/input.h"
+
 #include "video/gop.h"
 #include "video/menu/bootsel.h"
 
@@ -14,6 +16,8 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
+
+	UINT8 selected_entry           = UINT8_MAX;
 
 	InitializeLib(image, systable);
 
@@ -53,8 +57,9 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	}
 
 	// Display boot selector menu
-	UINT8 selection = bootsel_show(config_entries, config_entries_count);
-	if (selection == UINT8_MAX) return EFI_ABORTED;
+	status = bootsel_run(&selected_entry, config_entries, config_entries_count);
+	if (status == EFI_ABORTED)
+		uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
 
 	// TODO: Boot from selection
 
