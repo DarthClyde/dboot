@@ -14,6 +14,25 @@ inline static UINTN get_file_size(EFI_FILE_HANDLE file)
 	return size;
 }
 
+inline static VOID get_name_from_ident(CHAR16* ident, CHAR16* name)
+{
+	CHAR16* last_slash = NULL;
+	CHAR16* current    = ident;
+
+	// Find last slash in identifier
+	while (*current)
+	{
+		if (*current == '/') last_slash = current;
+		current++;
+	}
+
+	// Extract name
+	if (last_slash)
+		StrCpy(name, last_slash + 1);
+	else
+		StrCpy(name, ident);
+}
+
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image)
 {
 	EFI_STATUS status           = EFIERR(99);
@@ -89,30 +108,11 @@ VOID config_debuglog(config_entry_t* entries, UINTN count)
 	{
 		if (entries[i].type == ENTRY_TYPE_GROUP) continue;
 
-		Print(L"%s\n", entries[i].name);
+		Print(L"%s\n", entries[i].ident);
 		Print(L"  Type: %d\n", entries[i].type);
 	}
 
-	Print(L"---- END CONFIG DEBUG LOG ----\n");
-}
-
-inline static VOID get_display_name(CHAR16* name, CHAR16* display_name)
-{
-	CHAR16* last_slash = NULL;
-	CHAR16* current    = name;
-
-	// Find last slash in name
-	while (*current)
-	{
-		if (*current == '/') last_slash = current;
-		current++;
-	}
-
-	// Extract display name
-	if (last_slash)
-		StrCpy(display_name, last_slash + 1);
-	else
-		StrCpy(display_name, name);
+	Print(L"---- END CONFIG DEBUG LOG ----\n\n");
 }
 
 EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count)
@@ -156,17 +156,24 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 			current_entry = &config_entries[entry_count];
 			ZeroMem(current_entry, sizeof(config_entry_t));
 
-			// Set entry name
+			// Set entry identifier
 			{
 				UINTN length = lend - lstart - 2;
-				if (length > MAX_NAME_LEN) length = MAX_NAME_LEN;
-				for (UINTN i = 0; i < length; i++) current_entry->name[i] = (CHAR16)(lstart[i + 1]);
-				current_entry->name[length] = '\0';
+				if (length > MAX_IDENT_LEN)
+				{
+					// Skip entries with identifiers longer than the max to prevent issues when
+					// parsing for groups
+					continue;
+				}
+
+				for (UINTN i = 0; i < length; i++)
+					current_entry->ident[i] = (CHAR16)(lstart[i + 1]);
+				current_entry->ident[length] = '\0';
 			}
 
-			// Set display name
+			// Set entry name
 			{
-				get_display_name(current_entry->name, current_entry->display_name);
+				get_name_from_ident(current_entry->ident, current_entry->name);
 			}
 
 			entry_count++;

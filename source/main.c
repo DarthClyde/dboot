@@ -3,6 +3,9 @@
 
 #include "fs/config.h"
 
+#include "video/gop.h"
+#include "video/menu/bootsel.h"
+
 EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 {
 	EFI_STATUS status;
@@ -28,7 +31,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	                           (VOID**)&loaded_image, image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (EFI_ERROR(status))
 	{
-		Print(L"Failed to load root image.");
+		Print(L"Failed to load root image.\n");
 		goto err_exit;
 	}
 
@@ -36,18 +39,29 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	status = config_load(&config_entries, &config_entries_count, loaded_image->DeviceHandle);
 	if (EFI_ERROR(status))
 	{
-		Print(L"Failed to load dboot config file.");
+		Print(L"Failed to load dboot config file.\n");
 		goto err_exit;
 	}
 	config_debuglog(config_entries, config_entries_count);
 
-	// Hang
-	while (1);
+	// Start the GOP
+	status = gop_init();
+	if (EFI_ERROR(status))
+	{
+		Print(L"Failed to start GOP\n");
+		goto err_exit;
+	}
+
+	// Display boot selector menu
+	UINT8 selection = bootsel_show(config_entries, config_entries_count);
+	if (selection == UINT8_MAX) return EFI_ABORTED;
+
+	// TODO: Boot from selection
 
 	return EFI_SUCCESS;
 
 err_exit:
-	Print(L"\n\nPress any key to continue...\n");
+	Print(L"\n\nPress any key to exit...\n");
 	WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
 	return status;
 }
