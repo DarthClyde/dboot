@@ -23,8 +23,6 @@ BOOLEAN input_is_key_pressed(key_t key)
 {
 	key_t pressed = input_get_keypress();
 
-	if (pressed == key)
-		return TRUE;
-	else
-		return FALSE;
+	if (pressed == key) return TRUE;
+	else return FALSE;
 }

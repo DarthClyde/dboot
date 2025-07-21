@@ -27,10 +27,8 @@ inline static VOID get_name_from_ident(CHAR16* ident, CHAR16* name)
 	}
 
 	// Extract name
-	if (last_slash)
-		StrCpy(name, last_slash + 1);
-	else
-		StrCpy(name, ident);
+	if (last_slash) StrCpy(name, last_slash + 1);
+	else StrCpy(name, ident);
 }
 
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image)
