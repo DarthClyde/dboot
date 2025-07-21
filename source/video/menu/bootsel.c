@@ -5,9 +5,12 @@
 #include "video/gop.h"
 #include "utils/input.h"
 
-#define DEFAULT_COLOR   EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK)
-#define ACCENT_COLOR    EFI_TEXT_ATTR(EFI_CYAN, EFI_BLACK)
-#define HIGHLIGHT_COLOR EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY)
+#define DEFAULT_COLOR            EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK)
+#define ACCENT_COLOR             EFI_TEXT_ATTR(EFI_CYAN, EFI_BLACK)
+#define HIGHLIGHT_COLOR          EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY)
+
+#define BOOT_TIMEOUT_CLEARFOOTER -1
+#define BOOT_TIMEOUT_DISABLED    -2
 
 EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 {
@@ -19,6 +22,8 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 	UINTN top                          = 0;
 
 	CHAR16** entry_titles              = NULL;
+
+	CHAR16* clearline                  = NULL;
 
 	CHAR16* footer                     = NULL;
 	UINT16 footer_strlen               = 0;
@@ -49,12 +54,12 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 	top = COUT->Mode->CursorRow;
 
 	// Draw header
-	UINT16* header_str = L"dboot " DBOOT_VERSION;
+	static UINT16 header_str[] = L"dboot " DBOOT_VERSION;
 	gop_printp((columns - StrLen(header_str)) / 2, top, header_str);
 
 	// Draw help
 	{
-		const UINTN help_strlen = 58;
+		static const UINTN help_strlen = 58;
 		uefi_call_wrapper(COUT->SetCursorPosition, 3, COUT, (columns - help_strlen) / 2, top + 1);
 
 		gop_printc(ACCENT_COLOR, L"UP/DOWN");
@@ -70,21 +75,32 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 		gop_printc(DEFAULT_COLOR, L" - Custom");
 	}
 
+	// Create clearline string
+	clearline = AllocatePool((columns + 1) * sizeof(CHAR16));
+	for (UINTN i = 0; i < columns; i++) clearline[i] = ' ';
+	clearline[columns] = '\0';
+
 	// Create entry titles
-	entry_titles = AllocatePool(entries_count * sizeof(CHAR16));
+	entry_titles = AllocatePool(entries_count * sizeof(CHAR16*));
 	for (UINTN i = 0; i < entries_count; i++)
 	{
 		CHAR16** title        = &entry_titles[i];
 		config_entry_t* entry = &entries[i];
 
 		// Allocate title string
-		*title = AllocatePool(MAX_TITLE_LEN);
+		*title = AllocatePool((MAX_TITLE_LEN + 1) * sizeof(CHAR16));
 
 		// Fill title with whitespace
-		for (UINTN j = 0; j < MAX_TITLE_LEN; j++) { (*title)[j] = ' '; }
+		for (UINTN j = 0; j < MAX_TITLE_LEN; j++)
+		{
+			(*title)[j] = ' ';
+		}
 
 		// If entry is a group, add tag for it
-		if (entry->type == ENTRY_TYPE_GROUP) { StrnCpy(&(*title)[0], L"[+]", 3); }
+		if (entry->type == ENTRY_TYPE_GROUP)
+		{
+			StrnCpy(&(*title)[0], L"[+]", 3);
+		}
 
 		// Copy entry name to title
 		UINTN name_len = StrLen(entry->name);
@@ -117,21 +133,19 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 			if (title == NULL) continue;
 
 			// Set colors
-			if (i == selection)
-				uefi_call_wrapper(COUT->SetAttribute, 2, COUT, HIGHLIGHT_COLOR);
-			else
-				uefi_call_wrapper(COUT->SetAttribute, 2, COUT, DEFAULT_COLOR);
+			if (i == selection) uefi_call_wrapper(COUT->SetAttribute, 2, COUT, HIGHLIGHT_COLOR);
+			else uefi_call_wrapper(COUT->SetAttribute, 2, COUT, DEFAULT_COLOR);
 
 			// Print entry title
 			gop_printp((columns - MAX_TITLE_LEN) / 2, top + 4 + i, title);
 		}
 
 		// Draw footer string
-		gop_printpc((columns - footer_strlen) / 2, rows - 1, DEFAULT_COLOR, footer);
+		if (footer) gop_printpc((columns - footer_strlen) / 2, rows - 1, DEFAULT_COLOR, footer);
 
 		// Handle key events
 		key_t key = input_get_keypress();
-		if (key) boot_timeout = -1;
+		if (boot_timeout != BOOT_TIMEOUT_DISABLED && key) boot_timeout = BOOT_TIMEOUT_CLEARFOOTER;
 		switch (key)
 		{
 			case KEY(0, 'Q'):
@@ -143,20 +157,16 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 			// Move selection up
 			case KEY(SCAN_UP, 0):
 			{
-				if (selection == 0)
-					selection = (entries_count - 1);
-				else
-					selection--;
+				if (selection == 0) selection = (entries_count - 1);
+				else selection--;
 				break;
 			}
 
 			// Move selection down
 			case KEY(SCAN_DOWN, 0):
 			{
-				if (selection == (entries_count - 1))
-					selection = 0;
-				else
-					selection++;
+				if (selection == (entries_count - 1)) selection = 0;
+				else selection++;
 				break;
 			}
 
@@ -173,6 +183,14 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 				selection = (entries_count - 1);
 				break;
 			}
+
+			// Select current entry
+			case KEY(0, CHAR_LINEFEED):
+			case KEY(0, CHAR_CARRIAGE_RETURN):
+			{
+				status = EFI_SUCCESS;
+				goto end;
+			}
 		}
 
 		// Update boot timeout
@@ -185,18 +203,30 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 			uefi_call_wrapper(BS->Stall, 1, 100 * 1000);
 			boot_timeout--;
 		}
-		else if (boot_timeout == -1)
+
+		// Clear footer and disable boot timeout
+		else if (boot_timeout == BOOT_TIMEOUT_CLEARFOOTER)
 		{
-			// TODO: Clear footer line
+			if (footer) FreePool(footer);
+			footer        = NULL;
+			footer_strlen = 0;
+
+			gop_printpc(0, rows - 1, DEFAULT_COLOR, clearline + 1);
+
+			boot_timeout = BOOT_TIMEOUT_DISABLED;
 		}
+
+		// Boot into default entry
 		else if (boot_timeout == 0)
 		{
-			// TODO: Boot into selected entry
+			status = EFI_SUCCESS;
+			goto end;
 		}
 	}
 
 end:
-	for (UINTN i = 0; i < entries_count; i++) { FreePool(entry_titles[i]); }
+	if (clearline) FreePool(clearline);
+	for (UINTN i = 0; i < entries_count; i++) FreePool(entry_titles[i]);
 	if (entry_titles) FreePool(entry_titles);
 	if (footer) FreePool(footer);
 

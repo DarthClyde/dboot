@@ -3,16 +3,14 @@
 
 #include "fs/config.h"
 
-#include "utils/input.h"
-
 #include "video/gop.h"
 #include "video/menu/bootsel.h"
 
 EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 {
-	EFI_STATUS status;
+	EFI_STATUS status              = EFIERR(99);
 
-	EFI_LOADED_IMAGE* loaded_image;
+	EFI_LOADED_IMAGE* loaded_image = NULL;
 
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
@@ -36,7 +34,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load root image.\n");
-		goto err_exit;
+		goto wait_exit;
 	}
 
 	// Load dboot config
@@ -44,7 +42,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load dboot config file.\n");
-		goto err_exit;
+		goto wait_exit;
 	}
 	config_debuglog(config_entries, config_entries_count);
 
@@ -53,19 +51,28 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to start GOP\n");
-		goto err_exit;
+		goto wait_exit;
 	}
 
 	// Display boot selector menu
 	status = bootsel_run(&selected_entry, config_entries, config_entries_count);
-	if (status == EFI_ABORTED)
-		uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
 
-	// TODO: Boot from selection
+	// Handle results from boot selector menu
+	if (status == EFI_ABORTED)
+	{
+		uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
+	}
+	else if (status == EFI_SUCCESS)
+	{
+		uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
+		uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
+		gop_printp(0, 0, L"Booting into entry #%d", selected_entry);
+		goto wait_exit;
+	}
 
 	return EFI_SUCCESS;
 
-err_exit:
+wait_exit:
 	Print(L"\n\nPress any key to exit...\n");
 	WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
 	return status;
