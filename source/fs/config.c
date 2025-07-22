@@ -31,6 +31,16 @@ inline static VOID get_name_from_ident(CHAR16* ident, CHAR16* name)
 	else StrCpy(name, ident);
 }
 
+inline static VOID get_parent_from_ident(CHAR16* ident, CHAR16* parent)
+{
+	UINTN i = 0;
+	while (ident[i] != '/' && ident[i] != '\0')
+	{
+		parent[i] = ident[i];
+		i++;
+	}
+}
+
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image)
 {
 	EFI_STATUS status           = EFIERR(99);
@@ -172,6 +182,11 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 			// Set entry name
 			{
 				get_name_from_ident(current_entry->ident, current_entry->name);
+			}
+
+			// Set parent name
+			{
+				get_parent_from_ident(current_entry->ident, current_entry->parent_name);
 			}
 
 			entry_count++;

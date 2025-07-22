@@ -54,6 +54,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 		goto wait_exit;
 	}
 
+#if 1
 	// Display boot selector menu
 	status = bootsel_run(&selected_entry, config_entries, config_entries_count);
 
@@ -66,9 +67,14 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	{
 		uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
 		uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
-		gop_printp(0, 0, L"Booting into entry #%d", selected_entry);
+		gop_printpc(0, 0, EFI_YELLOW | EFI_BACKGROUND_BLUE, L"Booting into entry #%d",
+		            selected_entry);
 		goto wait_exit;
 	}
+#else
+	bootsel_debuglog(config_entries, config_entries_count);
+	goto wait_exit;
+#endif
 
 	return EFI_SUCCESS;
 

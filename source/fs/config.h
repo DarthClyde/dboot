@@ -21,10 +21,10 @@ typedef struct config_entry
 	// Entry info
 	CHAR16 ident[MAX_IDENT_LEN];
 	CHAR16 name[MAX_IDENT_LEN];
+	CHAR16 parent_name[MAX_IDENT_LEN];
 
-	// Entry config
+	// Entry options
 	entry_type_t type;
-
 } config_entry_t;
 
 // Config loader

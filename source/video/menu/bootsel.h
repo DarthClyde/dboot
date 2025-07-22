@@ -12,4 +12,6 @@
 
 EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count);
 
+VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count);
+
 #endif
