@@ -12,26 +12,20 @@
 #define BOOT_TIMEOUT_CLEARFOOTER -1
 #define BOOT_TIMEOUT_DISABLED    -2
 
-#define MENU_ITER_START                                   \
-	while (s_menu_iter != NULL)                           \
-	{                                                     \
-		if (s_menu_iter->title == NULL) goto mov_next;    \
-		if (s_menu_iter->is_child == TRUE) goto mov_next;
-
-#define MENU_ITER_END                \
-mov_next:                            \
-	s_menu_iter = s_menu_iter->next; \
-	i++;                             \
-	}
+#define GROUP_DEPTH_NONE         -1
 
 typedef struct menu_item
 {
 	CHAR16* title;
 	UINTN config_index;
 
-	BOOLEAN is_child;
-	struct menu_item* child_next;
+	INTN group_depth;
+	BOOLEAN is_expanded;
 
+	BOOLEAN is_child;
+	struct menu_item* parent;
+
+	struct menu_item* prev;
 	struct menu_item* next;
 } menu_item_t;
 
@@ -40,16 +34,14 @@ static UINTN s_rows              = 0;
 static UINTN s_top               = 0;
 
 static menu_item_t* s_menu_first = NULL;
+static menu_item_t* s_menu_last  = NULL;
 static menu_item_t* s_menu_iter  = NULL;
+static menu_item_t* s_selected   = NULL;
 
 static CHAR16* s_clearline       = NULL;
 
 static CHAR16* s_footer          = NULL;
 static UINT16 s_footer_strlen    = 0;
-
-static UINT8 s_selected          = 3;
-static UINT8 s_sel_index_min     = 0;
-static UINT8 s_sel_index_max     = 0;
 
 static INT64 s_boot_timeout      = 5 * 10;
 
@@ -122,9 +114,13 @@ inline static VOID populate_item(menu_item_t* item, config_entry_t* entry, UINTN
 	create_item_title(&item->title, entry);
 	item->config_index = i;
 
-	item->child_next   = NULL;
-	item->is_child     = FALSE;
+	item->group_depth  = GROUP_DEPTH_NONE;
+	item->is_expanded  = FALSE;
 
+	item->is_child     = FALSE;
+	item->parent       = NULL;
+
+	item->prev         = NULL;
 	item->next         = NULL;
 }
 
@@ -147,71 +143,82 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 		// Handle groups
 		if (entries[i].type == ENTRY_TYPE_GROUP)
 		{
-			// Find children of group
 			CHAR16* parent_name   = entries[i].name;
 			UINTN parent_name_len = StrLen(parent_name);
+			INTN num_children     = 0;
+
+			// Find children of group
 			for (UINTN j = 0; j < entries_count; j++)
 			{
 				if (j == i) continue;
 
 				if (CompareMem(parent_name, entries[j].parent_name, parent_name_len) == 0)
 				{
-					// Create child
 					menu_item_t* child = AllocatePool(sizeof(menu_item_t));
 					populate_item(child, &entries[j], j);
-					child->is_child = TRUE;
 
-					if (s_menu_iter->child_next == NULL) s_menu_iter->child_next = child;
-					if (last_child) last_child->child_next = child;
+					child->is_child = TRUE;
+					child->parent   = s_menu_iter;
+
+					// There is a previous child
+					if (last_child)
+					{
+						child->prev      = last_child;
+						last_child->next = child;
+					}
+
+					// This is the first child
+					else
+					{
+						child->prev       = s_menu_iter;
+						s_menu_iter->next = child;
+					}
 
 					last_child = child;
+					num_children++;
 				}
 			}
+
+			s_menu_iter->group_depth = num_children;
 		}
 
-		// Link last item to current
+		// This is the first item
 		if (!s_menu_first) s_menu_first = s_menu_iter;
-		if (last_item) last_item->next = s_menu_iter;
-		last_item = s_menu_iter;
+
+		// Link items
+		if (last_item)
+		{
+			if (!s_menu_iter->prev) s_menu_iter->prev = last_item;
+			if (!last_item->next) last_item->next = s_menu_iter;
+		}
+
+		// Set last item to current if not a group
+		if (s_menu_iter->group_depth == GROUP_DEPTH_NONE) last_item = s_menu_iter;
+		// Else: set last item to last child
+		else last_item = last_child;
 
 		// Stop if at end of entries
 		if ((i + 1) == entries_count) break;
 	}
 
-	// Set iterator to first item
+	s_menu_last = s_menu_iter;
 	s_menu_iter = s_menu_first;
 }
 
-inline static menu_item_t* get_selected_item(UINT8 index)
-{
-	UINTN i                     = 0;
-	menu_item_t* prev_menu_iter = s_menu_iter;
-
-	// Iterate in the same way as the drawing loop to ensure index match
-	s_menu_iter = s_menu_first;
-	MENU_ITER_START
-	{
-		if (i == index) break;
-	}
-	MENU_ITER_END
-
-	// Check that index was actually found
-	if (i != index) return NULL;
-
-	// Restore previous iterator and return
-	menu_item_t* item = s_menu_iter;
-	s_menu_iter       = prev_menu_iter;
-	return item;
-}
-
-EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
+EFI_STATUS bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count)
 {
 	EFI_STATUS status                  = EFIERR(99);
 	SIMPLE_TEXT_OUTPUT_INTERFACE* COUT = ST->ConOut;
 	UINTN i                            = 0;
 
-	if (!gop_isactive()) return BOOTSEL_RET_ERROR;
+	if (!gop_isactive()) return EFI_NOT_READY;
 
+	create_menu_items(entries, entries_count);
+
+	// TODO: Read defaults from config
+	s_selected = s_menu_iter;
+
+redraw:
 	// Setup menu
 	uefi_call_wrapper(COUT->Reset, 2, COUT, FALSE);
 	uefi_call_wrapper(COUT->EnableCursor, 2, COUT, FALSE);
@@ -223,41 +230,48 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 	uefi_call_wrapper(COUT->ClearScreen, 1, COUT);
 
 	// Query the screen size
-	status = uefi_call_wrapper(COUT->QueryMode, 4, COUT, COUT->Mode->Mode, &s_columns, &s_rows);
-	if (EFI_ERROR(status))
+	if (s_columns == 0)
 	{
-		// Fallback size
-		s_columns = 80;
-		s_rows    = 25;
-	}
-	s_top = COUT->Mode->CursorRow;
+		status = uefi_call_wrapper(COUT->QueryMode, 4, COUT, COUT->Mode->Mode, &s_columns, &s_rows);
+		if (EFI_ERROR(status))
+		{
+			// Fallback size
+			s_columns = 80;
+			s_rows    = 25;
+		}
 
-	// Create clearline string
-	s_clearline = AllocatePool((s_columns + 1) * sizeof(CHAR16));
-	for (i = 0; i < s_columns; i++) s_clearline[i] = ' ';
-	s_clearline[s_columns] = '\0';
+		s_top = COUT->Mode->CursorRow;
+
+		// Create clearline string
+		s_clearline = AllocatePool((s_columns + 1) * sizeof(CHAR16));
+		for (i = 0; i < s_columns; i++) s_clearline[i] = ' ';
+		s_clearline[s_columns] = '\0';
+	}
 
 	draw_static_elements();
-
-	create_menu_items(entries, entries_count);
 
 	// Menu loop
 	while (TRUE)
 	{
 		// Draw entries menu
 		i = 0;
-		MENU_ITER_START
+		while (s_menu_iter != NULL)
 		{
+			if (!s_menu_iter->title) goto next;
+			if (s_menu_iter->is_child && !s_menu_iter->parent->is_expanded) goto next;
+
 			// Set colors
 			uefi_call_wrapper(COUT->SetAttribute, 2, COUT,
-			                  i == s_selected ? HIGHLIGHT_COLOR : DEFAULT_COLOR);
+			                  s_menu_iter == s_selected ? HIGHLIGHT_COLOR : DEFAULT_COLOR);
 
 			// Print entry title
 			gop_printp((s_columns - MAX_TITLE_LEN) / 2, s_top + 4 + i, s_menu_iter->title);
+			i++;
+
+next:
+			s_menu_iter = s_menu_iter->next;
 		}
-		MENU_ITER_END
-		s_sel_index_max = i - 1;
-		s_menu_iter     = s_menu_first;
+		s_menu_iter = s_menu_first;
 
 		// Draw footer string
 		if (s_footer)
@@ -280,30 +294,68 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 			// Move selection up
 			case KEY(SCAN_UP, 0):
 			{
-				if (s_selected == s_sel_index_min) s_selected = s_sel_index_max;
-				else s_selected--;
+				while (TRUE)
+				{
+					s_selected = s_selected->prev;
+
+					// If at top, move to bottom
+					if (!s_selected)
+					{
+						s_selected = s_menu_last;
+						break;
+					}
+
+					// Check conditions if selection is a child
+					if (s_selected->is_child)
+					{
+						if (s_selected->parent->is_expanded) break;
+						else continue;
+					}
+
+					// Selection is valid
+					break;
+				}
 				break;
 			}
 
 			// Move selection down
 			case KEY(SCAN_DOWN, 0):
 			{
-				if (s_selected == s_sel_index_max) s_selected = s_sel_index_min;
-				else s_selected++;
+				while (TRUE)
+				{
+					s_selected = s_selected->next;
+
+					// If at bottom, move to top
+					if (!s_selected)
+					{
+						s_selected = s_menu_first;
+						break;
+					}
+
+					// Check conditions if selection is a child
+					if (s_selected->is_child)
+					{
+						if (s_selected->parent->is_expanded) break;
+						else continue;
+					}
+
+					// Selection is valid
+					break;
+				}
 				break;
 			}
 
 			// Move selection to first entry
 			case KEY(SCAN_HOME, 0):
 			{
-				s_selected = s_sel_index_min;
+				s_selected = s_menu_first;
 				break;
 			}
 
 			// Move selection to last entry
 			case KEY(SCAN_END, 0):
 			{
-				s_selected = s_sel_index_max;
+				s_selected = s_menu_last;
 				break;
 			}
 
@@ -311,10 +363,14 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 			case KEY(0, CHAR_LINEFEED):
 			case KEY(0, CHAR_CARRIAGE_RETURN):
 			{
-				s_selected = get_selected_item(s_selected)->config_index;
-				if (entries[s_selected].type == ENTRY_TYPE_GROUP)
+				if (s_selected->group_depth != GROUP_DEPTH_NONE)
 				{
-					// TODO: Handle groups
+					s_selected->is_expanded = !s_selected->is_expanded;
+
+					if (s_selected->is_expanded) s_selected->title[1] = '-';
+					else s_selected->title[1] = '+';
+
+					goto redraw;
 				}
 				else
 				{
@@ -350,7 +406,6 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 		// Boot into default entry
 		else if (s_boot_timeout == 0)
 		{
-			s_selected = get_selected_item(s_selected)->config_index;
 			// TODO: Should check that this is not a group
 			status = EFI_SUCCESS;
 			goto end;
@@ -358,11 +413,20 @@ EFI_STATUS bootsel_run(UINT8* sel, config_entry_t* entries, UINTN entries_count)
 	}
 
 end:
+	*sel = s_selected->config_index;
+
 	if (s_clearline) FreePool(s_clearline);
 	if (s_footer) FreePool(s_footer);
-	// TODO: The menu items list is not freed
 
-	*sel = s_selected;
+	s_menu_iter = s_menu_last;
+	while (s_menu_iter != NULL)
+	{
+		if (s_menu_iter->title) FreePool(s_menu_iter->title);
+		if (s_menu_iter->next) FreePool(s_menu_iter->next);
+		s_menu_iter = s_menu_iter->prev;
+	}
+	if (s_menu_first) FreePool(s_menu_first);
+
 	return status;
 }
 
@@ -382,27 +446,14 @@ VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count)
 
 	create_menu_items(entries, entries_count);
 
-	menu_item_t* last_real_item = NULL;
 	while (s_menu_iter != NULL)
 	{
 		gop_print(L"---- [%d][%p] %s ----\n", s_menu_iter->config_index, s_menu_iter,
 		          entries[s_menu_iter->config_index].name);
-		gop_print(L"IsChild: %c\n", s_menu_iter->is_child ? 'y' : 'n');
-		gop_print(L"NextChild: %p -- Next: %p\n", s_menu_iter->child_next, s_menu_iter->next);
-
-		if (s_menu_iter->child_next)
-		{
-			if (!last_real_item) last_real_item = s_menu_iter;
-			s_menu_iter = s_menu_iter->child_next;
-			continue;
-		}
-		else if (!s_menu_iter->child_next && last_real_item)
-		{
-			s_menu_iter    = last_real_item->next;
-			last_real_item = NULL;
-			continue;
-		}
-
+		gop_print(L"Group Depth: %d\n", s_menu_iter->group_depth);
+		gop_print(L"IsChild: %c -- Parent: %p\n", s_menu_iter->is_child ? 'y' : 'n',
+		          s_menu_iter->parent);
+		gop_print(L"Prev: %p -- Next: %p\n", s_menu_iter->prev, s_menu_iter->next);
 		s_menu_iter = s_menu_iter->next;
 	}
 

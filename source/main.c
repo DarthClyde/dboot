@@ -15,7 +15,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
 
-	UINT8 selected_entry           = UINT8_MAX;
+	UINTN selected_entry           = UINT8_MAX;
 
 	InitializeLib(image, systable);
 
@@ -54,7 +54,6 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 		goto wait_exit;
 	}
 
-#if 1
 	// Display boot selector menu
 	status = bootsel_run(&selected_entry, config_entries, config_entries_count);
 
@@ -71,10 +70,6 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 		            selected_entry);
 		goto wait_exit;
 	}
-#else
-	bootsel_debuglog(config_entries, config_entries_count);
-	goto wait_exit;
-#endif
 
 	return EFI_SUCCESS;
 
