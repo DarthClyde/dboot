@@ -9,6 +9,8 @@
 
 EFI_STATUS bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count);
 
+#ifdef DB_DEBUG
 VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count);
+#endif
 
 #endif

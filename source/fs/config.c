@@ -108,21 +108,6 @@ end:
 	return status;
 }
 
-VOID config_debuglog(config_entry_t* entries, UINTN count)
-{
-	Print(L"---- PARSED '%s' ----\n", CONFIG_FILE_PATH);
-
-	for (UINTN i = 0; i < count; i++)
-	{
-		if (entries[i].type == ENTRY_TYPE_GROUP) continue;
-
-		Print(L"%s\n", entries[i].ident);
-		Print(L"  Type: %d\n", entries[i].type);
-	}
-
-	Print(L"---- END CONFIG DEBUG LOG ----\n\n");
-}
-
 EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count)
 {
 	EFI_STATUS status              = EFIERR(99);
@@ -236,3 +221,20 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 end:
 	return status;
 }
+
+#ifdef DB_DEBUG
+VOID config_debuglog(config_entry_t* entries, UINTN count)
+{
+	Print(L"---- PARSED '%s' ----\n", CONFIG_FILE_PATH);
+
+	for (UINTN i = 0; i < count; i++)
+	{
+		if (entries[i].type == ENTRY_TYPE_GROUP) continue;
+
+		Print(L"%s\n", entries[i].ident);
+		Print(L"  Type: %d\n", entries[i].type);
+	}
+
+	Print(L"---- END CONFIG DEBUG LOG ----\n\n");
+}
+#endif

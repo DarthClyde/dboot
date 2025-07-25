@@ -11,7 +11,7 @@ GNUEFI_OBJ = $(GNUEFI_BUILD_DIR)/gnuefi/crt0-efi-$(ARCH).o
 
 # Preprocessor
 CDEFS =											\
-	-D DBOOT_VERSION="\"$(DBOOT_VERSION)\""		\
+	-D DB_VERSION="\"$(DBOOT_VERSION)\""		\
 
 # Flags
 CFLAGS =						\
@@ -61,10 +61,15 @@ ifeq ($(ARCH), x86_64)
 	CFLAGS += -DCONFIG_x86_64
 endif
 
-# Enable compiler optimization flags
+# Compiler optimization flags
 ifeq ($(OPTIMIZE), true)
 	CFLAGS += -Os
 	LDFLAGS += -Os
+endif
+
+# Debug mode
+ifeq ($(DEBUG), true)
+	CDEFS += -D DB_DEBUG
 endif
 
 # Build C binaries

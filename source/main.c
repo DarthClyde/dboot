@@ -15,7 +15,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
 
-	UINTN selected_entry           = UINT8_MAX;
+	UINTN selected_entry           = UINT64_MAX;
 
 	InitializeLib(image, systable);
 
@@ -24,7 +24,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
 
 	// Print dboot info
-	Print(L"dboot v" DBOOT_VERSION " compiled "__DATE__
+	Print(L"dboot v" DB_VERSION " compiled "__DATE__
 	      " at "__TIME__);
 	Print(L"\n\n");
 
@@ -44,7 +44,9 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 		Print(L"Failed to load dboot config file.\n");
 		goto wait_exit;
 	}
+#ifdef DB_DEBUG
 	config_debuglog(config_entries, config_entries_count);
+#endif
 
 	// Start the GOP
 	status = gop_init();

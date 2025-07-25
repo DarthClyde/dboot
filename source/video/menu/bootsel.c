@@ -48,7 +48,7 @@ static INT64 s_boot_timeout      = 5 * 10;
 inline static VOID draw_static_elements(void)
 {
 	// Draw header
-	static UINT16 header_str[] = L"dboot " DBOOT_VERSION;
+	static UINT16 header_str[] = L"dboot " DB_VERSION;
 	gop_printp((s_columns - StrLen(header_str)) / 2, s_top, header_str);
 
 	// Draw help
@@ -430,8 +430,7 @@ end:
 	return status;
 }
 
-// TODO: Put these debug functions behind a DEBUG flag
-#if 0
+#ifdef DB_DEBUG
 VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count)
 {
 	SIMPLE_TEXT_OUTPUT_INTERFACE* COUT = ST->ConOut;

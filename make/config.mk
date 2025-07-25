@@ -10,6 +10,7 @@ SUPPRESS = >/dev/null 2>/dev/null
 
 # Build options
 OPTIMIZE = false
+DEBUG = true
 IMG_SIZE = 64M
 
 # QEMU options

@@ -27,11 +27,12 @@ typedef struct config_entry
 	entry_type_t type;
 } config_entry_t;
 
-// Config loader
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image);
-VOID config_debuglog(config_entry_t* entries, UINTN count);
-
-// Config parser
 EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count);
+
+// Debug
+#ifdef DB_DEBUG
+VOID config_debuglog(config_entry_t* entries, UINTN count);
+#endif
 
 #endif
