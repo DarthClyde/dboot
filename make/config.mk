@@ -11,7 +11,9 @@ SUPPRESS = >/dev/null 2>/dev/null
 # Build options
 OPTIMIZE = false
 DEBUG = true
-IMG_SIZE = 64M
 
 # QEMU options
+IMG_SIZE = 200M
 OVMF_FIRM_PATH = /usr/share/ovmf/x64/OVMF.4m.fd
+HOST_VMLINUZ_PATH = /boot/vmlinuz-linux
+HOST_INITRAMFS_PATH = /boot/initramfs-linux.img

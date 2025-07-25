@@ -34,9 +34,8 @@ MSG_GEN_CC_DONE = $(PFX_DONE)"Generated 'compile_commands.json' with 'bear'"
 # Help menu
 help:
 	@ echo "Available Targets:"
-	@ echo "  all           - Build the full bootloader + libraries"
+	@ echo "  all           - Build the bootloader EFI + libraries"
 	@ echo "  dboot-efi     - Build the bootloader EFI application"
-	@ echo "  dboot-image   - Build the bootloader FAT32 image"
 	@ echo ""
 	@ echo "  lib-gnuefi    - Build the 'GNU-EFI' library"
 	@ echo ""
@@ -45,6 +44,7 @@ help:
 	@ echo "  clean-gnuefi  - Clean the 'GNU-EFI' build directory"
 	@ echo "  clean-all     - Runs: clean, clean-cc, clean-gnuefi"
 	@ echo ""
+	@ echo "  qemu-prep      - Prepare the QEMU FAT32 image file"
 	@ echo "  qemu-run      - Run QEMU normally"
 	@ echo "  qemu-debug    - Run QEMU with GDB debugging enabled"
 	@ echo ""
