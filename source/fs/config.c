@@ -212,6 +212,33 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 					else if (CompareMem(leql + 1, "efi", 3) == 0)
 						current_entry->type = ENTRY_TYPE_EFI;
 				}
+
+				// Extract key: kernel
+				else if (CompareMem(lstart, "kernel", 6) == 0)
+				{
+					current_entry->kernel_path = AllocatePool((val_len + 1) * sizeof(CHAR16));
+					for (UINTN i = 0; i < val_len; i++)
+						current_entry->kernel_path[i] = (CHAR16)(leql + 1)[i];
+					current_entry->kernel_path[val_len] = '\0';
+				}
+
+				// Extract key: module
+				else if (CompareMem(lstart, "module", 6) == 0)
+				{
+					current_entry->module_path = AllocatePool((val_len + 1) * sizeof(CHAR16));
+					for (UINTN i = 0; i < val_len; i++)
+						current_entry->module_path[i] = (CHAR16)(leql + 1)[i];
+					current_entry->module_path[val_len] = '\0';
+				}
+
+				// Extract key: cmdline
+				else if (CompareMem(lstart, "cmdline", 7) == 0)
+				{
+					current_entry->cmdline = AllocatePool((val_len + 1) * sizeof(CHAR16));
+					for (UINTN i = 0; i < val_len; i++)
+						current_entry->cmdline[i] = (CHAR16)(leql + 1)[i];
+					current_entry->cmdline[val_len] = '\0';
+				}
 			}
 		}
 
@@ -235,10 +262,18 @@ VOID config_debuglog(config_entry_t* entries, UINTN count)
 
 	for (UINTN i = 0; i < count; i++)
 	{
-		if (entries[i].type == ENTRY_TYPE_GROUP) continue;
+		entry_type_t type = entries[i].type;
+		if (type == ENTRY_TYPE_GROUP) continue;
 
 		Print(L"%s/%s\n", entries[i].parent_name, entries[i].name);
-		Print(L"  Type: %d\n", entries[i].type);
+
+		if (type == ENTRY_TYPE_LINUX)
+		{
+			Print(L"  Type: %d:linux\n", type);
+			Print(L"  Kernel: %s\n", entries[i].kernel_path);
+			Print(L"  Module: %s\n", entries[i].module_path);
+			Print(L"  Cmdline: %s\n", entries[i].cmdline);
+		}
 	}
 
 	Print(L"---- END CONFIG DEBUG LOG ----\n\n");

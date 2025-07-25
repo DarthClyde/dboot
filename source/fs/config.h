@@ -22,6 +22,11 @@ typedef struct config_entry
 
 	// Entry options
 	entry_type_t type;
+
+	// Entry config
+	CHAR16* kernel_path;
+	CHAR16* module_path;
+	CHAR16* cmdline;
 } config_entry_t;
 
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image);
