@@ -142,16 +142,15 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 		// Handle groups
 		if (entries[i].type == ENTRY_TYPE_GROUP)
 		{
-			CHAR16* parent_name   = entries[i].name;
-			UINTN parent_name_len = StrLen(parent_name);
-			INTN num_children     = 0;
+			CHAR16* parent_name = entries[i].name;
+			INTN num_children   = 0;
 
 			// Find children of group
 			for (UINTN j = 0; j < entries_count; j++)
 			{
 				if (j == i) continue;
 
-				if (CompareMem(parent_name, entries[j].parent_name, parent_name_len) == 0)
+				if (StrCmp(parent_name, entries[j].parent_name) == 0)
 				{
 					menu_item_t* child = AllocatePool(sizeof(menu_item_t));
 					populate_item(child, &entries[j], j);
