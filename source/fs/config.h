@@ -3,8 +3,6 @@
 
 #include <efi.h>
 
-#define MAX_IDENT_LEN    128
-#define MAX_PATH_LEN     256
 #define MAX_ENTRIES      16
 #define CONFIG_FILE_PATH L"\\EFI\\DBOOT.CONF"
 
@@ -19,9 +17,8 @@ typedef enum : UINT8
 typedef struct config_entry
 {
 	// Entry info
-	CHAR16 ident[MAX_IDENT_LEN];
-	CHAR16 name[MAX_IDENT_LEN];
-	CHAR16 parent_name[MAX_IDENT_LEN];
+	CHAR16* name;
+	CHAR16* parent_name;
 
 	// Entry options
 	entry_type_t type;

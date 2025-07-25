@@ -14,33 +14,6 @@ inline static UINTN get_file_size(EFI_FILE_HANDLE file)
 	return size;
 }
 
-inline static VOID get_name_from_ident(CHAR16* ident, CHAR16* name)
-{
-	CHAR16* last_slash = NULL;
-	CHAR16* current    = ident;
-
-	// Find last slash in identifier
-	while (*current)
-	{
-		if (*current == '/') last_slash = current;
-		current++;
-	}
-
-	// Extract name
-	if (last_slash) StrCpy(name, last_slash + 1);
-	else StrCpy(name, ident);
-}
-
-inline static VOID get_parent_from_ident(CHAR16* ident, CHAR16* parent)
-{
-	UINTN i = 0;
-	while (ident[i] != '/' && ident[i] != '\0')
-	{
-		parent[i] = ident[i];
-		i++;
-	}
-}
-
 EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image)
 {
 	EFI_STATUS status           = EFIERR(99);
@@ -153,30 +126,59 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 			current_entry = &config_entries[entry_count];
 			ZeroMem(current_entry, sizeof(config_entry_t));
 
-			// Set entry identifier
+			// Set temporary entry identifier
+			CHAR16* identifier;
 			{
 				UINTN length = lend - lstart - 2;
-				if (length > MAX_IDENT_LEN)
+				identifier   = AllocatePool((length + 1) * sizeof(CHAR16));
+
+				for (UINTN i = 0; i < length; i++) identifier[i] = (CHAR16)(lstart[i + 1]);
+				identifier[length] = '\0';
+			}
+
+			// Set entry name and parent name
+			{
+				CHAR16* last_slash = NULL;
+				CHAR16* current    = identifier;
+
+				// Find last slash in identifier
+				while (*current)
 				{
-					// Skip entries with identifiers longer than the max to prevent issues when
-					// parsing for groups
-					continue;
+					if (*current == '/') last_slash = current;
+					current++;
 				}
 
-				for (UINTN i = 0; i < length; i++)
-					current_entry->ident[i] = (CHAR16)(lstart[i + 1]);
-				current_entry->ident[length] = '\0';
+				// Entry is a child of a group
+				if (last_slash)
+				{
+					// Set entry name
+					UINTN length        = StrLen(last_slash);
+					current_entry->name = AllocatePool((length + 1) * sizeof(CHAR16));
+					StrCpy(current_entry->name, last_slash + 1);
+					current_entry->name[length] = '\0';
+
+					// Set parent name
+					length                     = StrLen(identifier) - length;
+					current_entry->parent_name = AllocatePool((length + 1) * sizeof(CHAR16));
+					StrnCpy(current_entry->parent_name, identifier, length);
+					current_entry->parent_name[length] = '\0';
+				}
+
+				// Entry is standalone
+				else
+				{
+					// Set entry name
+					UINTN length        = StrLen(identifier);
+					current_entry->name = AllocatePool((length + 1) * sizeof(CHAR16));
+					StrCpy(current_entry->name, identifier);
+					current_entry->name[length] = '\0';
+
+					// Set parent name
+					current_entry->parent_name = NULL;
+				}
 			}
 
-			// Set entry name
-			{
-				get_name_from_ident(current_entry->ident, current_entry->name);
-			}
-
-			// Set parent name
-			{
-				get_parent_from_ident(current_entry->ident, current_entry->parent_name);
-			}
+			FreePool(identifier);
 
 			entry_count++;
 		}
@@ -235,7 +237,7 @@ VOID config_debuglog(config_entry_t* entries, UINTN count)
 	{
 		if (entries[i].type == ENTRY_TYPE_GROUP) continue;
 
-		Print(L"%s\n", entries[i].ident);
+		Print(L"%s/%s\n", entries[i].parent_name, entries[i].name);
 		Print(L"  Type: %d\n", entries[i].type);
 	}
 

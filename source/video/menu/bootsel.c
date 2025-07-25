@@ -133,8 +133,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 	for (UINTN i = 0; i < entries_count; i++)
 	{
 		// Skip entries that are children
-		if (CompareMem(entries[i].name, entries[i].parent_name, StrLen(entries[i].name)) != 0)
-			continue;
+		if (entries[i].parent_name) continue;
 
 		// Create current item
 		s_menu_iter = AllocatePool(sizeof(menu_item_t));
