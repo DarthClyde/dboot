@@ -95,7 +95,7 @@ BreakBeforeTernaryOperators: true
 BreakTemplateDeclarations: Yes
 IndentPPDirectives: BeforeHash
 InsertBraces: false
-InsertNewlineAtEOF: false
+InsertNewlineAtEOF: true
 KeepEmptyLines:
   AtStartOfFile: false
   AtEndOfFile: false
