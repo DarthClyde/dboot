@@ -52,7 +52,7 @@ $(DBOOT_IMG): $(DBOOT_EFI) | $(BUILD_DIR)
 	@ mmd -i $@ ::/EFI/BOOT
 	@ mcopy -i $@ $^ ::/EFI/BOOT/BOOT$(EFI_ARCH).EFI
 
-	@ mcopy -i $@ examples/test/dboot.conf ::/EFI/DBOOT.CONF
+	@ mcopy -i $@ examples/$(TEST_CONFIG)/dboot.conf ::/EFI/DBOOT.CONF
 
 	@ mcopy -i $@ $(HOST_VMLINUZ_PATH) ::/vmlinuz-linux
 	@ mcopy -i $@ $(HOST_INITRAMFS_PATH) ::/initramfs-linux.img

@@ -14,6 +14,7 @@ DEBUG = true
 
 # QEMU options
 IMG_SIZE = 200M
+TEST_CONFIG = test
 OVMF_FIRM_PATH = /usr/share/ovmf/x64/OVMF.4m.fd
 HOST_VMLINUZ_PATH = /boot/vmlinuz-linux
 HOST_INITRAMFS_PATH = /boot/initramfs-linux.img
