@@ -146,6 +146,10 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 		// Parse header
 		if (*lstart == '[' && *(lend - 1) == ']')
 		{
+			// Check that current entry is not > max entries
+			if (entry_count > MAX_ENTRIES) break;
+
+			// Get and zero current entry
 			current_entry = &config_entries[entry_count];
 			ZeroMem(current_entry, sizeof(config_entry_t));
 
