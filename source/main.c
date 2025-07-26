@@ -1,6 +1,7 @@
 #include <efi.h>
 #include <efilib.h>
 
+#include "fs/fs.h"
 #include "fs/config.h"
 
 #include "video/gop.h"
@@ -9,8 +10,6 @@
 EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 {
 	EFI_STATUS status              = EFIERR(99);
-
-	EFI_LOADED_IMAGE* loaded_image = NULL;
 
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
@@ -28,9 +27,8 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	      " at "__TIME__);
 	Print(L"\n\n");
 
-	// Load the root image
-	status = uefi_call_wrapper(BS->OpenProtocol, 6, image, &LoadedImageProtocol,
-	                           (VOID**)&loaded_image, image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	// Load root image
+	status = fs_load_image(image);
 	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load root image.\n");
@@ -38,7 +36,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	}
 
 	// Load dboot config
-	status = config_load(&config_entries, &config_entries_count, loaded_image->DeviceHandle);
+	status = config_load(&config_entries, &config_entries_count);
 	if (EFI_ERROR(status))
 	{
 		Print(L"Failed to load dboot config file.\n");

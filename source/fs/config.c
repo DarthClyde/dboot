@@ -1,82 +1,36 @@
 #include "fs/config.h"
+#include "fs/fs.h"
 
 #include <efilib.h>
 
-inline static UINTN get_file_size(EFI_FILE_HANDLE file)
+EFI_STATUS config_load(config_entry_t** entries, UINTN* count)
 {
-	UINTN size;
-	EFI_FILE_INFO* info;
+	EFI_STATUS status = EFIERR(99);
 
-	info = LibFileInfo(file);
-	size = info->FileSize;
+	CHAR8* buffer     = NULL;
+	UINTN buffer_size = 0;
 
-	FreePool(info);
-	return size;
-}
+	*entries          = NULL;
+	*count            = 0;
 
-EFI_STATUS config_load(config_entry_t** entries, UINTN* count, EFI_HANDLE image)
-{
-	EFI_STATUS status           = EFIERR(99);
-
-	EFI_FILE_HANDLE volume      = NULL;
-	EFI_FILE_HANDLE config_file = NULL;
-
-	CHAR8* buffer               = NULL;
-	UINTN buffer_size           = 0;
-
-	*entries                    = NULL;
-	*count                      = 0;
-
-	// Open the root volume
-	volume = LibOpenRoot(image);
-	if (volume == NULL)
-	{
-		Print(L"Failed to open root volume\n");
-		return EFI_LOAD_ERROR;
-	}
-
-	// Open the config file
-	status = uefi_call_wrapper(volume->Open, 5, volume, &config_file, CONFIG_FILE_PATH,
-	                           EFI_FILE_MODE_READ, 0);
+	// Load the config file
+	status = fs_load_file(CONFIG_FILE_PATH, (VOID**)&buffer, &buffer_size);
 	if (EFI_ERROR(status))
 	{
-		Print(L"Failed to open config file: %d\n", status);
+		Print(L"Failed to load dboot config file: %d\n", status);
 		goto end;
 	}
-
-	// Get file information
-	buffer_size = get_file_size(config_file);
-	if (buffer_size == 0)
-	{
-		Print(L"Config file contains no data\n");
-		goto end;
-	}
-
-	// Allocate buffer for file
-	status = uefi_call_wrapper(BS->AllocatePool, 3, PoolAllocationType, buffer_size + 1,
-	                           (VOID**)&buffer);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to allocate buffer for config file: %d\n", status);
-		goto end;
-	}
-
-	// Read file content
-	status = uefi_call_wrapper(config_file->Read, 3, config_file, &buffer_size, (VOID*)buffer);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to read config file: %d\n", status);
-		goto end;
-	}
-	buffer[buffer_size] = '\0';
 
 	// Parse the config file
 	status = config_parse(buffer, buffer_size, entries, count);
+	if (EFI_ERROR(status))
+	{
+		Print(L"Failed to load parse config file: %d\n", status);
+		goto end;
+	}
 
 end:
 	if (buffer) uefi_call_wrapper(BS->FreePool, 1, buffer);
-	if (config_file) uefi_call_wrapper(config_file->Close, 1, config_file);
-	if (volume) uefi_call_wrapper(volume->Close, 1, volume);
 
 	return status;
 }
