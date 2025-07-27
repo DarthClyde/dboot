@@ -289,6 +289,13 @@ next:
 				goto end;
 			}
 
+			// Exit to EFI shell
+			case KEY(0, 'S'):
+			{
+				status = EFI_ABORTED + 100;
+				goto end;
+			}
+
 			// Move selection up
 			case KEY(SCAN_UP, 0):
 			{

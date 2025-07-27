@@ -62,6 +62,10 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	{
 		uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
 	}
+	else if (status == EFI_ABORTED + 100)
+	{
+		return EFI_ABORTED;
+	}
 	else if (status == EFI_SUCCESS)
 	{
 		uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
