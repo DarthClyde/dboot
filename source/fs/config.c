@@ -7,17 +7,20 @@ EFI_STATUS config_load(config_entry_t** entries, UINTN* count)
 {
 	EFI_STATUS status = EFIERR(99);
 
+	file_t* file      = NULL;
+
 	CHAR8* buffer     = NULL;
 	UINTN buffer_size = 0;
 
 	*entries          = NULL;
 	*count            = 0;
 
-	// Load the config file
-	status = fs_load_file(CONFIG_FILE_PATH, (VOID**)&buffer, &buffer_size);
+	// Read the config file
+	status = fs_file_open(fs_get_image(), CONFIG_FILE_PATH, &file);
+	status += fs_file_readall(file, (VOID**)&buffer, &buffer_size);
 	if (EFI_ERROR(status))
 	{
-		Print(L"Failed to load dboot config file: %d\n", status);
+		Print(L"Failed to read dboot config file: %d\n", status);
 		goto end;
 	}
 
@@ -31,6 +34,7 @@ EFI_STATUS config_load(config_entry_t** entries, UINTN* count)
 
 end:
 	if (buffer) uefi_call_wrapper(BS->FreePool, 1, buffer);
+	if (file) fs_file_close(file);
 
 	return status;
 }
