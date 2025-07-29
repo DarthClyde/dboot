@@ -117,11 +117,11 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* module_path, CHAR16* cmdline)
 	if (EFI_ERROR(status)) goto kernel_load_err;
 
 	// Configure setup headers
-	setup_header->vid_mode       = 0xFFFF;
-	setup_header->type_of_loader = 0xFF;
-	setup_header->loadflags &= ~(1 << 5); /* Early messages */
+	setup_header->vid_mode       = 0xFFFF; /* Normal */
+	setup_header->type_of_loader = 0xFF;   /* Undefined / Custom */
+	setup_header->loadflags &= ~(1 << 5);  /* Early messages */
 
-	// Set kernel load info
+	// Set kernel alloc info
 	kernel_addr      = 0x100000;
 	kernel_code_size = kernel_size - setup_size;
 

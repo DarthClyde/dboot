@@ -85,43 +85,43 @@ struct setup_header
 
 struct screen_info
 {
-	UINT8 orig_x; /* 0x00 */
-	UINT8 orig_y; /* 0x01 */
-	UINT16 ext_mem_k; /* 0x02 */
-	UINT16 orig_video_page; /* 0x04 */
-	UINT8 orig_video_mode; /* 0x06 */
-	UINT8 orig_video_cols; /* 0x07 */
-	UINT8 flags; /* 0x08 */
-	UINT8 unused2; /* 0x09 */
+	UINT8 orig_x;             /* 0x00 */
+	UINT8 orig_y;             /* 0x01 */
+	UINT16 ext_mem_k;         /* 0x02 */
+	UINT16 orig_video_page;   /* 0x04 */
+	UINT8 orig_video_mode;    /* 0x06 */
+	UINT8 orig_video_cols;    /* 0x07 */
+	UINT8 flags;              /* 0x08 */
+	UINT8 unused2;            /* 0x09 */
 	UINT16 orig_video_ega_bx; /* 0x0a */
-	UINT16 unused3; /* 0x0c */
-	UINT8 orig_video_lines; /* 0x0e */
-	UINT8 orig_video_isVGA; /* 0x0f */
+	UINT16 unused3;           /* 0x0c */
+	UINT8 orig_video_lines;   /* 0x0e */
+	UINT8 orig_video_isVGA;   /* 0x0f */
 	UINT16 orig_video_points; /* 0x10 */
 
 	/* VESA graphic mode -- linear frame buffer */
-	UINT16 lfb_width; /* 0x12 */
-	UINT16 lfb_height; /* 0x14 */
-	UINT16 lfb_depth; /* 0x16 */
-	UINT32 lfb_base; /* 0x18 */
-	UINT32 lfb_size; /* 0x1c */
+	UINT16 lfb_width;           /* 0x12 */
+	UINT16 lfb_height;          /* 0x14 */
+	UINT16 lfb_depth;           /* 0x16 */
+	UINT32 lfb_base;            /* 0x18 */
+	UINT32 lfb_size;            /* 0x1c */
 	UINT16 cl_magic, cl_offset; /* 0x20 */
-	UINT16 lfb_linelength; /* 0x24 */
-	UINT8 red_size; /* 0x26 */
-	UINT8 red_pos; /* 0x27 */
-	UINT8 green_size; /* 0x28 */
-	UINT8 green_pos; /* 0x29 */
-	UINT8 blue_size; /* 0x2a */
-	UINT8 blue_pos; /* 0x2b */
-	UINT8 rsvd_size; /* 0x2c */
-	UINT8 rsvd_pos; /* 0x2d */
-	UINT16 vesapm_seg; /* 0x2e */
-	UINT16 vesapm_off; /* 0x30 */
-	UINT16 pages; /* 0x32 */
-	UINT16 vesa_attributes; /* 0x34 */
-	UINT32 capabilities; /* 0x36 */
-	UINT32 ext_lfb_base; /* 0x3a */
-	UINT8 _reserved[2]; /* 0x3e */
+	UINT16 lfb_linelength;      /* 0x24 */
+	UINT8 red_size;             /* 0x26 */
+	UINT8 red_pos;              /* 0x27 */
+	UINT8 green_size;           /* 0x28 */
+	UINT8 green_pos;            /* 0x29 */
+	UINT8 blue_size;            /* 0x2a */
+	UINT8 blue_pos;             /* 0x2b */
+	UINT8 rsvd_size;            /* 0x2c */
+	UINT8 rsvd_pos;             /* 0x2d */
+	UINT16 vesapm_seg;          /* 0x2e */
+	UINT16 vesapm_off;          /* 0x30 */
+	UINT16 pages;               /* 0x32 */
+	UINT16 vesa_attributes;     /* 0x34 */
+	UINT32 capabilities;        /* 0x36 */
+	UINT32 ext_lfb_base;        /* 0x3a */
+	UINT8 _reserved[2];         /* 0x3e */
 } __attribute__((packed));
 
 struct apm_bios_info
@@ -192,8 +192,8 @@ struct edd_device_params
 	UINT32 sectors_per_track;
 	UINT64 number_of_sectors;
 	UINT16 bytes_per_sector;
-	UINT32 dpte_ptr; /* 0xFFFFFFFF for our purposes */
-	UINT16 key; /* = 0xBEDD */
+	UINT32 dpte_ptr;               /* 0xFFFFFFFF for our purposes */
+	UINT16 key;                    /* = 0xBEDD */
 	UINT8 device_path_info_length; /* = 44 */
 	UINT8 reserved2;
 	UINT16 reserved3;
@@ -333,40 +333,40 @@ struct edd_info
 
 struct boot_params
 {
-	struct screen_info screen_info; /* 0x000 */
-	struct apm_bios_info apm_bios_info; /* 0x040 */
-	UINT8 _pad2[4]; /* 0x054 */
-	UINT64 tboot_addr; /* 0x058 */
-	struct ist_info ist_info; /* 0x060 */
-	UINT64 acpi_rsdp_addr; /* 0x070 */
-	UINT8 _pad3[8]; /* 0x078 */
-	UINT8 hd0_info[16]; /* obsolete! */ /* 0x080 */
-	UINT8 hd1_info[16]; /* obsolete! */ /* 0x090 */
+	struct screen_info screen_info;                       /* 0x000 */
+	struct apm_bios_info apm_bios_info;                   /* 0x040 */
+	UINT8 _pad2[4];                                       /* 0x054 */
+	UINT64 tboot_addr;                                    /* 0x058 */
+	struct ist_info ist_info;                             /* 0x060 */
+	UINT64 acpi_rsdp_addr;                                /* 0x070 */
+	UINT8 _pad3[8];                                       /* 0x078 */
+	UINT8 hd0_info[16]; /* obsolete! */                   /* 0x080 */
+	UINT8 hd1_info[16]; /* obsolete! */                   /* 0x090 */
 	struct sys_desc_table sys_desc_table; /* obsolete! */ /* 0x0a0 */
-	struct olpc_ofw_header olpc_ofw_header; /* 0x0b0 */
-	UINT32 ext_ramdisk_image; /* 0x0c0 */
-	UINT32 ext_ramdisk_size; /* 0x0c4 */
-	UINT32 ext_cmd_line_ptr; /* 0x0c8 */
-	UINT8 _pad4[116]; /* 0x0cc */
-	struct edid_info edid_info; /* 0x140 */
-	struct efi_info efi_info; /* 0x1c0 */
-	UINT32 alt_mem_k; /* 0x1e0 */
-	UINT32 scratch; /* Scratch field! */ /* 0x1e4 */
-	UINT8 e820_entries; /* 0x1e8 */
-	UINT8 eddbuf_entries; /* 0x1e9 */
-	UINT8 edd_mbr_sig_buf_entries; /* 0x1ea */
-	UINT8 kbd_status; /* 0x1eb */
-	UINT8 secure_boot; /* 0x1ec */
-	UINT8 _pad5[2]; /* 0x1ed */
-	UINT8 sentinel; /* 0x1ef */
-	UINT8 _pad6[1]; /* 0x1f0 */
-	struct setup_header hdr; /* setup header */ /* 0x1f1 */
+	struct olpc_ofw_header olpc_ofw_header;               /* 0x0b0 */
+	UINT32 ext_ramdisk_image;                             /* 0x0c0 */
+	UINT32 ext_ramdisk_size;                              /* 0x0c4 */
+	UINT32 ext_cmd_line_ptr;                              /* 0x0c8 */
+	UINT8 _pad4[116];                                     /* 0x0cc */
+	struct edid_info edid_info;                           /* 0x140 */
+	struct efi_info efi_info;                             /* 0x1c0 */
+	UINT32 alt_mem_k;                                     /* 0x1e0 */
+	UINT32 scratch; /* Scratch field! */                  /* 0x1e4 */
+	UINT8 e820_entries;                                   /* 0x1e8 */
+	UINT8 eddbuf_entries;                                 /* 0x1e9 */
+	UINT8 edd_mbr_sig_buf_entries;                        /* 0x1ea */
+	UINT8 kbd_status;                                     /* 0x1eb */
+	UINT8 secure_boot;                                    /* 0x1ec */
+	UINT8 _pad5[2];                                       /* 0x1ed */
+	UINT8 sentinel;                                       /* 0x1ef */
+	UINT8 _pad6[1];                                       /* 0x1f0 */
+	struct setup_header hdr; /* setup header */           /* 0x1f1 */
 	UINT8 _pad7[0x290 - 0x1f1 - sizeof(struct setup_header)];
-	UINT32 edd_mbr_sig_buffer[EDD_MBR_SIG_MAX]; /* 0x290 */
+	UINT32 edd_mbr_sig_buffer[EDD_MBR_SIG_MAX];                   /* 0x290 */
 	struct boot_e820_entry e820_table[E820_MAX_ENTRIES_ZEROPAGE]; /* 0x2d0 */
-	UINT8 _pad8[48]; /* 0xcd0 */
-	struct edd_info eddbuf[EDDMAXNR]; /* 0xd00 */
-	UINT8 _pad9[276]; /* 0xeec */
+	UINT8 _pad8[48];                                              /* 0xcd0 */
+	struct edd_info eddbuf[EDDMAXNR];                             /* 0xd00 */
+	UINT8 _pad9[276];                                             /* 0xeec */
 } __attribute__((packed));
 
 #endif
