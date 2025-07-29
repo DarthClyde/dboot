@@ -17,7 +17,7 @@ static inline VOID linux_efi_handover(struct boot_params* params)
 
 	// Calculate handover address
 	UINTN handover_addr = params->hdr.code32_start + 512 + params->hdr.handover_offset;
-	Print(L"[linux] Calling EFI handover at 0x%lx...\n", handover_addr);
+	Print(L"\n[linux] Calling EFI handover at 0x%lx...\n", handover_addr);
 
 	// Perform handover
 	handover = (handover_func)(handover_addr);
@@ -49,7 +49,7 @@ static inline EFI_STATUS validate_setup_header(struct setup_header* setup)
 	return EFI_SUCCESS;
 }
 
-EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* module_path, CHAR16* cmdline)
+EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 {
 	EFI_STATUS status                 = EFIERR(99);
 	UINT32 signature                  = 0;
@@ -64,11 +64,14 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* module_path, CHAR16* cmdline)
 	UINTN kernel_code_size            = 0;
 	EFI_PHYSICAL_ADDRESS kernel_addr  = 0x0;
 
-	VOID* initrd                      = NULL;
 	UINTN initrd_size                 = 0;
 	EFI_PHYSICAL_ADDRESS initrd_addr  = 0x0;
 
+	UINTN cmdline_len                 = 0;
+	EFI_PHYSICAL_ADDRESS cmdline_addr = 0x0;
+
 	// Open the kernel bzImage
+	Print(L"Loading kernel: %s\n", kernel_path);
 	status = fs_file_open(fs_get_image(), kernel_path, &file);
 	if (EFI_ERROR(status)) goto kernel_load_err;
 
@@ -149,8 +152,57 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* module_path, CHAR16* cmdline)
 	if (EFI_ERROR(status)) goto kernel_load_err;
 	fs_file_close(file);
 
-	// TODO: cmdline
-	// TODO: initrd
+	// Load cmdline
+	if (cmdline)
+	{
+		// Set cmdline alloc info
+		cmdline_len  = AsciiStrLen(cmdline);
+		cmdline_addr = 0xA0000;
+
+		// Allocate memory for cmdline
+		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
+		                           EFI_SIZE_TO_PAGES(cmdline_len + 1), &cmdline_addr);
+		if (EFI_ERROR(status)) goto initrd_load_err;
+
+		// Copy cmdline to allocated memory
+		CopyMem((VOID*)cmdline_addr, cmdline, cmdline_len);
+		((CHAR8*)cmdline_addr)[cmdline_len] = '\0';
+
+		// Set boot params for cmdline
+		setup_header->cmdline_ptr = (UINT32)cmdline_addr;
+	}
+
+	// Load initrd
+	if (initrd_path)
+	{
+		// Open the initrd file
+		Print(L"\nLoading initrd: %s\n", initrd_path);
+		status = fs_file_open(fs_get_image(), initrd_path, &file);
+		if (EFI_ERROR(status)) goto initrd_load_err;
+
+		// Get the initrd size
+		status = fs_file_getsize(file, &initrd_size);
+		if (EFI_ERROR(status)) goto initrd_load_err;
+		initrd_addr = 0x3FFFFFFF;
+
+		// Allocate memory for initrd
+		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
+		                           EFI_SIZE_TO_PAGES(initrd_size), &initrd_addr);
+		if (EFI_ERROR(status)) goto initrd_load_err;
+
+		// Read initrd into allocate memory
+		status = fs_file_readr(file, initrd_size, (VOID*)initrd_addr);
+		if (EFI_ERROR(status)) goto initrd_load_err;
+		fs_file_close(file);
+
+		// Set boot params for initrd
+		setup_header->ramdisk_image = (UINT32)initrd_addr;
+		setup_header->ramdisk_size  = (UINT32)initrd_size;
+#ifdef __x86_64__
+		boot_params->ext_ramdisk_image = (UINT32)(initrd_addr >> 32);
+		boot_params->ext_ramdisk_size  = (UINT32)(initrd_size >> 32);
+#endif
+	}
 
 	// To Linux We Go :) !!
 	linux_efi_handover(boot_params);
@@ -158,11 +210,15 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* module_path, CHAR16* cmdline)
 	//     "It was at this moment he knew... he f**ked up"
 	// (╯°□°)╯ ┻━┻
 	Print(L"[linux] EFI handover failed\n");
-	status = EFI_NOT_STARTED;
+	status = EFI_LOAD_ERROR;
 	goto end;
 
 kernel_load_err:
 	Print(L"Failed to load Linux kernel: %d\n", status);
+	goto end;
+
+initrd_load_err:
+	Print(L"Failed to load initrd: %d\n", status);
 	goto end;
 
 end:

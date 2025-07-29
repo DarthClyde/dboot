@@ -192,9 +192,9 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 				// Extract key: cmdline
 				else if (CompareMem(lstart, "cmdline", 7) == 0)
 				{
-					current_entry->cmdline = AllocatePool((val_len + 1) * sizeof(CHAR16));
+					current_entry->cmdline = AllocatePool((val_len + 1) * sizeof(CHAR8));
 					for (UINTN i = 0; i < val_len; i++)
-						current_entry->cmdline[i] = (CHAR16)(leql + 1)[i];
+						current_entry->cmdline[i] = (CHAR8)(leql + 1)[i];
 					current_entry->cmdline[val_len] = '\0';
 				}
 			}

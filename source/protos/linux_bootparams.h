@@ -65,7 +65,7 @@ struct setup_header
 	UINT16 heap_end_ptr;
 	UINT8 ext_loader_ver;
 	UINT8 ext_loader_type;
-	UINT32 cmd_line_ptr;
+	UINT32 cmdline_ptr;
 	UINT32 initrd_addr_max;
 	UINT32 kernel_alignment;
 	UINT8 relocatable_kernel;
