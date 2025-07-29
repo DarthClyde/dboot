@@ -33,7 +33,7 @@ lib-gnuefi:
 # Build the bootloader EFI
 OBJCOPY_FLAGS := -j .text -j .sdata -j .data -j .rodata -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc
 $(DBOOT_EFI): lib-gnuefi $(DBOOT_SO) | $(BUILD_DIR)
-	@ $(OBJCOPY) $(OBJCOPY_FLAGS) --target efi-app-$(ARCH) $(DBOOT_SO) $@
+	@ $(OBJCOPY) $(OBJCOPY_FLAGS) --target=efi-app-$(ARCH) $(DBOOT_SO) $@
 	@ echo -e $(MSG_DONE_EFI)$@
 
 # Build the bootloader image for QEMU
@@ -62,7 +62,7 @@ $(DBOOT_IMG): $(DBOOT_EFI) | $(BUILD_DIR)
 # Run QEMU in normal mode
 qemu-run: $(DBOOT_IMG)
 	@ echo -e $(MSG_QEMU_RUN)
-	@ $(QEMU) -machine accel=kvm -m 1024                        \
+	@ $(QEMU) -machine accel=kvm -m 1G                          \
 		-cpu host -bios $(OVMF_FIRM_PATH)                       \
 		-drive format=raw,unit=0,file=$^                        \
 		-net none
@@ -70,7 +70,7 @@ qemu-run: $(DBOOT_IMG)
 # Run QEMU in debug mode
 qemu-debug: $(DBOOT_IMG)
 	@ echo -e $(MSG_QEMU_RUN)" in debug mode"
-	@ $(QEMU) -machine accel=kvm -m 1024M                       \
+	@ $(QEMU) -machine accel=kvm -m 1G                          \
 		-cpu host -bios $(OVMF_FIRM_PATH)                       \
 		-drive format=raw,unit=0,file=$^                        \
 		-net none -s -S

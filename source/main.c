@@ -7,6 +7,8 @@
 #include "video/gop.h"
 #include "video/menu/bootsel.h"
 
+#include "protos/boot.h"
+
 EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 {
 	EFI_STATUS status              = EFIERR(99);
@@ -70,12 +72,17 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	{
 		uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
 		uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
-		gop_printpc(0, 0, EFI_YELLOW | EFI_BACKGROUND_BLUE, L"Booting into entry #%d",
-		            selected_entry);
+		uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, EFI_YELLOW);
+		gop_printp(0, 0, L"Booting into entry #%d\n\n", selected_entry);
+
+		// Boot into entry
+		status = boot_boot(&config_entries[selected_entry]);
+		if (EFI_ERROR(status))
+			Print(L"Failed to boot into entry #%d: %d\n", selected_entry, status);
+
+		// If boot was successfull, we will never reach this
 		goto wait_exit;
 	}
-
-	return EFI_SUCCESS;
 
 wait_exit:
 	Print(L"\n\nPress any key to exit...\n");

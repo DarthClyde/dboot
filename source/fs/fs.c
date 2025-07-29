@@ -28,10 +28,16 @@ EFI_LOADED_IMAGE* fs_get_image(void)
 	return s_loaded_image;
 }
 
-EFI_STATUS fs_file_read(file_t* file, UINTN* size, VOID** buffer)
+EFI_STATUS fs_file_read(file_t* file, UINTN* size, VOID* buffer)
 {
 	if (!file) return EFI_INVALID_PARAMETER;
-	return uefi_call_wrapper(file->handle->Read, 3, file->handle, &(*size), *buffer);
+	return uefi_call_wrapper(file->handle->Read, 3, file->handle, size, buffer);
+}
+
+EFI_STATUS fs_file_readr(file_t* file, UINTN size, VOID* buffer)
+{
+	if (!file) return EFI_INVALID_PARAMETER;
+	return uefi_call_wrapper(file->handle->Read, 3, file->handle, &size, buffer);
 }
 
 EFI_STATUS fs_file_readall(file_t* file, VOID** buffer, UINTN* size)

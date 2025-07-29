@@ -10,48 +10,45 @@ C_OBJ := $(patsubst $(SRC_DIR)/%.c, $(SRC_BUILD_DIR)/%.o, $(C_SRC))
 GNUEFI_OBJ = $(GNUEFI_BUILD_DIR)/gnuefi/crt0-efi-$(ARCH).o
 
 # Preprocessor
-CDEFS =											\
-	-D DB_VERSION="\"$(DBOOT_VERSION)\""		\
+CDEFS =                                         \
+	-D DB_VERSION="\"$(DBOOT_VERSION)\""        \
 
 # Flags
-CFLAGS =						\
-	-Wall -Wextra				\
-	-Wno-pointer-sign			\
-	-Wno-error=pragmas			\
-	-std=c11					\
-	-fPIE						\
-	-ffreestanding				\
-	-fno-strict-aliasing		\
-	-fno-stack-protector		\
-	-fno-stack-check			\
-	-fno-merge-all-constants	\
-	-funsigned-char				\
-	-fshort-wchar				\
-	-mno-red-zone				\
-	-mno-avx					\
-	-DEFI_FUNCTION_WRAPPER		\
-	-DGNU_EFI_USE_MS_ABI		\
+CFLAGS =                        \
+	-Wall -Wextra               \
+	-Wno-error=pragmas          \
+	-std=c11                    \
+	-fPIC                       \
+	-ffreestanding              \
+	-fno-strict-aliasing        \
+	-fno-stack-protector        \
+	-fno-stack-check            \
+	-fno-merge-all-constants    \
+	-fshort-wchar               \
+	-mno-red-zone               \
+	-DEFI_FUNCTION_WRAPPER      \
+	-DGNU_EFI_USE_MS_ABI        \
 	-I $(SRC_DIR)
 
-LDFLAGS = 						\
-	-nostdlib 					\
-	-z nocombreloc				\
-	-shared 					\
-	-Bsymbolic 					\
-	--warn-common				\
-	--no-undefined				\
-	--fatal-warnings			\
-	-I $(SRC_DIR)				\
+LDFLAGS =                       \
+	-nostdlib                   \
+	-znocombreloc               \
+	-shared                     \
+	-Bsymbolic                  \
+	--warn-common               \
+	--no-undefined              \
+	--fatal-warnings            \
+	-I $(SRC_DIR)               \
 	-T $(LINKER_SCRIPT)
 
 # Add GNU-EFI
-CFLAGS +=										\
-	-I $(GNUEFI_DIR)/inc						\
-	-I $(GNUEFI_DIR)/inc/$(ARCH)				\
-	-I $(GNUEFI_DIR)/inc/protocol				\
+CFLAGS +=                                       \
+	-I $(GNUEFI_DIR)/inc                        \
+	-I $(GNUEFI_DIR)/inc/$(ARCH)                \
+	-I $(GNUEFI_DIR)/inc/protocol               \
 
-LDFLAGS +=										\
-	-L $(GNUEFI_BUILD_DIR)/lib					\
+LDFLAGS +=                                      \
+	-L $(GNUEFI_BUILD_DIR)/lib                  \
 	-L $(GNUEFI_BUILD_DIR)/gnuefi
 
 LIBS += -lefi -lgnuefi
