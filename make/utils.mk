@@ -25,11 +25,31 @@ MSG_DONE_EFI_OBJ = $(PFX_DONE)"Finished compiling EFI object"
 MSG_DONE_EFI = $(PFX_DONE)"Created bootloader EFI: "
 MSG_DONE_IMG = $(PFX_DONE)"Created bootloader image: "
 
+# Install messages
+MSG_INST_ENTRY = $(PFX_EXEC)"Creating DBOOT EFI entry"
+MSG_INST_EFI = $(PFX_EXEC)"Installing DBOOT EFI"
+MSG_INST_DONE = $(PFX_DONE)"Finished installing DBOOT"
+WRN_INST_ENTRYEXISTS = $(PFX_WARN)"DBOOT EFI entry already exists"
+
+# Uninstall messages
+MSG_UNINST_FINDENTRY = $(PFX_EXEC)"Finding DBOOT EFI entry bootnum"
+MSG_UNINST_ENTRY = $(PFX_DONE)"Removed DBOOT EFI entry"
+MSG_UNINST_EFI = $(PFX_EXEC)"Removing DBOOT EFI"
+MSG_UNINST_DONE = $(PFX_DONE)"Finished uninstalling DBOOT"
+
 # Other messages
 MSG_CLEAN = $(PFX_DONE)"Finished cleaning"
 MSG_QEMU_PREP = $(PFX_EXEC)"Setting up disk structure for QEMU"
 MSG_QEMU_RUN = $(PFX_EXEC)"Running QEMU"
 MSG_GEN_CC_DONE = $(PFX_DONE)"Generated 'compile_commands.json' with 'bear'"
+
+# Utility functions
+check_defined =                                            \
+	$(strip $(foreach 1,$1,                                \
+		$(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined =                                          \
+	$(if $(value $1),,                                     \
+		$(error Undefined $1$(if $2, ($2))))
 
 # Help menu
 help:
@@ -38,6 +58,9 @@ help:
 	@ echo "  dboot-efi     - Build the bootloader EFI application"
 	@ echo ""
 	@ echo "  lib-gnuefi    - Build the 'GNU-EFI' library"
+	@ echo ""
+	@ echo "  install       - Compile and install DBOOT EFI application"
+	@ echo "  uninstall     - Erase DBOOT EFI entry and application"
 	@ echo ""
 	@ echo "  clean         - Clean the build directory"
 	@ echo "  clean-cc      - Clean the compile_commands.json file"

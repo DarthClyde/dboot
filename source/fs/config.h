@@ -4,7 +4,7 @@
 #include <efi.h>
 
 #define MAX_ENTRIES      16
-#define CONFIG_FILE_PATH L"\\EFI\\DBOOT.CONF"
+#define CONFIG_FILE_PATH L"\\EFI\\DBOOT\\DBOOT.CONF"
 
 typedef enum : UINT8
 {

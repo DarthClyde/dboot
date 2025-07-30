@@ -12,6 +12,10 @@ SUPPRESS = >/dev/null 2>/dev/null
 OPTIMIZE = false
 DEBUG = true
 
+# Install options
+EFI_ENTRY_NAME = DBOOT UEFI Bootloader
+EFI_ENTRY_PATH = \EFI\DBOOT\BOOTX64.EFI
+
 # QEMU options
 IMG_SIZE = 200M
 TEST_CONFIG = test

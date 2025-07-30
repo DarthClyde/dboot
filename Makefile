@@ -50,9 +50,10 @@ $(DBOOT_IMG): $(DBOOT_EFI) | $(BUILD_DIR)
 
 	@ mmd -i $@ ::/EFI
 	@ mmd -i $@ ::/EFI/BOOT
+	@ mmd -i $@ ::/EFI/DBOOT
 	@ mcopy -i $@ $^ ::/EFI/BOOT/BOOT$(EFI_ARCH).EFI
 
-	@ mcopy -i $@ examples/$(TEST_CONFIG)/dboot.conf ::/EFI/DBOOT.CONF
+	@ mcopy -i $@ examples/$(TEST_CONFIG)/dboot.conf ::/EFI/DBOOT/DBOOT.CONF
 
 	@ mcopy -i $@ $(HOST_VMLINUZ_PATH) ::/vmlinuz-linux
 	@ mcopy -i $@ $(HOST_INITRAMFS_PATH) ::/initramfs-linux.img
@@ -106,7 +107,8 @@ clean-all: clean clean-cc clean-gnuefi
 include make/utils.mk
 include make/config.mk
 
+include make/install.mk
 include source/Makefile
 
 # Phony targets
-.PHONY: all dboot-efi lib-gnuefi qemu-prep qemu-run qemu-debug gen-cc clean clean-cc clean-genefi clean-all help
+.PHONY: all dboot-efi lib-gnuefi install uninstall qemu-prep qemu-run qemu-debug gen-cc clean clean-cc clean-genefi clean-all help
