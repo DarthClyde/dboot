@@ -49,9 +49,10 @@ static inline EFI_STATUS validate_setup_header(struct setup_header* setup)
 	return EFI_SUCCESS;
 }
 
-EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
+error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 {
-	EFI_STATUS status                 = EFIERR(99);
+	EFI_STATUS status                 = EFI_SUCCESS;
+	error_t error                     = ERR_OK;
 	UINT32 signature                  = 0;
 	file_t* file                      = NULL;
 
@@ -72,27 +73,32 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 
 	// Open the kernel bzImage
 	Print(L"Loading kernel: %s\n", kernel_path);
-	status = fs_file_open(fs_get_image(), kernel_path, &file);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_open(fs_get_image(), kernel_path, &file);
+	ERR_CHECK(error, END);
 
 	// Validate kernel signature
-	status = fs_file_setpos(file, SETUP_SIGNATURE_OFFSET);
-	status += fs_file_readr(file, sizeof(UINT32), &signature);
-	if (EFI_ERROR(status) || signature != SETUP_SIGNATURE)
+	error = fs_file_setpos(file, SETUP_SIGNATURE_OFFSET);
+	ERR_CHECK(error, END);
+	error = fs_file_readr(file, sizeof(UINT32), &signature);
+	ERR_CHECK(error, END);
+
+	if (signature != SETUP_SIGNATURE)
 	{
 		Print(L"[linux] Invalid kernel signature: 0x%lx\n", signature);
-		goto kernel_load_err;
+		goto end;
 	}
 
 	// Get setup header size
-	status = fs_file_setpos(file, SETUP_HEADER_OFFSET);
-	status += fs_file_readr(file, 0x01, &setup_size);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_setpos(file, SETUP_HEADER_OFFSET);
+	ERR_CHECK(error, END);
+	error = fs_file_readr(file, 0x01, &setup_size);
+	ERR_CHECK(error, END);
 
 	// Get setup header end
-	status = fs_file_setpos(file, SETUP_SIGNATURE_OFFSET - 1);
-	status += fs_file_readr(file, 0x01, &setup_header_end);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_setpos(file, SETUP_SIGNATURE_OFFSET - 1);
+	ERR_CHECK(error, END);
+	error = fs_file_readr(file, 0x01, &setup_header_end);
+	ERR_CHECK(error, END);
 
 	// Calculate setup header sizes
 	if (setup_size == 0) setup_size = 4;
@@ -101,23 +107,28 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 
 	// Allocate boot params buffer
 	boot_params = AllocateZeroPool(sizeof(struct boot_params));
-	if (!boot_params) goto kernel_load_err;
+	if (!boot_params)
+	{
+		ERR_PRINT_STR(L"Failed to allocate boot params buffer");
+		goto end;
+	}
 	setup_header = &boot_params->hdr;
 
 	// Read setup header
-	status = fs_file_setpos(file, SETUP_HEADER_OFFSET);
-	status += fs_file_readr(file, setup_header_end - SETUP_HEADER_OFFSET, setup_header);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_setpos(file, SETUP_HEADER_OFFSET);
+	ERR_CHECK(error, END);
+	error = fs_file_readr(file, setup_header_end - SETUP_HEADER_OFFSET, setup_header);
+	ERR_CHECK(error, END);
 
 	// Validate setup header
 	status = validate_setup_header(setup_header);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	if (EFI_ERROR(status)) goto end;
 	Print(L"[linux] Boot protocol version: %d.%d [0x%x]\n", (setup_header->version >> 8) & 0xFF,
 	      setup_header->version & 0xFF, setup_header->version);
 
 	// Get the kernel size
-	status = fs_file_getsize(file, &kernel_size);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_getsize(file, &kernel_size);
+	ERR_CHECK(error, END);
 
 	// Configure setup headers
 	setup_header->vid_mode       = 0xFFFF; /* Normal */
@@ -137,8 +148,8 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 
 		if (kernel_addr == 0xFFF00000)
 		{
-			Print(L"Failed to allocate kernel memory\n");
-			goto kernel_load_err;
+			ERR_PRINT_STR(L"Failed to allocate kernel memory");
+			goto end;
 		}
 
 		kernel_addr += 0x100000;
@@ -147,9 +158,10 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	setup_header->code32_start = (UINT32)kernel_addr;
 
 	// Read kernel code into allocated memory
-	status = fs_file_setpos(file, setup_size);
-	status += fs_file_readr(file, kernel_code_size, (VOID*)kernel_addr);
-	if (EFI_ERROR(status)) goto kernel_load_err;
+	error = fs_file_setpos(file, setup_size);
+	ERR_CHECK(error, END);
+	error = fs_file_readr(file, kernel_code_size, (VOID*)kernel_addr);
+	ERR_CHECK(error, END);
 	fs_file_close(file);
 
 	// Load cmdline
@@ -162,7 +174,7 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 		// Allocate memory for cmdline
 		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
 		                           EFI_SIZE_TO_PAGES(cmdline_len + 1), &cmdline_addr);
-		if (EFI_ERROR(status)) goto initrd_load_err;
+		if (EFI_ERROR(status)) goto end;
 
 		// Copy cmdline to allocated memory
 		CopyMem((VOID*)cmdline_addr, cmdline, cmdline_len);
@@ -177,22 +189,22 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	{
 		// Open the initrd file
 		Print(L"\nLoading initrd: %s\n", initrd_path);
-		status = fs_file_open(fs_get_image(), initrd_path, &file);
-		if (EFI_ERROR(status)) goto initrd_load_err;
+		error = fs_file_open(fs_get_image(), initrd_path, &file);
+		ERR_CHECK(error, END);
 
 		// Get the initrd size
-		status = fs_file_getsize(file, &initrd_size);
-		if (EFI_ERROR(status)) goto initrd_load_err;
+		error = fs_file_getsize(file, &initrd_size);
+		ERR_CHECK(error, END);
 		initrd_addr = 0x3FFFFFFF;
 
 		// Allocate memory for initrd
 		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
 		                           EFI_SIZE_TO_PAGES(initrd_size), &initrd_addr);
-		if (EFI_ERROR(status)) goto initrd_load_err;
+		if (EFI_ERROR(status)) goto end;
 
 		// Read initrd into allocate memory
-		status = fs_file_readr(file, initrd_size, (VOID*)initrd_addr);
-		if (EFI_ERROR(status)) goto initrd_load_err;
+		error = fs_file_readr(file, initrd_size, (VOID*)initrd_addr);
+		ERR_CHECK(error, END);
 		fs_file_close(file);
 
 		// Set boot params for initrd
@@ -210,17 +222,8 @@ EFI_STATUS linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	//     "It was at this moment he knew... he f**ked up"
 	// (╯°□°)╯ ┻━┻
 	Print(L"[linux] EFI handover failed\n");
-	status = EFI_LOAD_ERROR;
-	goto end;
-
-kernel_load_err:
-	Print(L"Failed to load Linux kernel: %d\n", status);
-	goto end;
-
-initrd_load_err:
-	Print(L"Failed to load initrd: %d\n", status);
-	goto end;
 
 end:
-	return status;
+	error = ERR_BOOT_FAIL_LINUX;
+	return error;
 }

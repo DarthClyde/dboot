@@ -203,13 +203,14 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 	s_menu_iter = s_menu_first;
 }
 
-EFI_STATUS bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count)
+UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count)
 {
-	EFI_STATUS status                  = EFIERR(99);
+	EFI_STATUS status                  = EFI_SUCCESS;
+	UINT8 retval                       = BOOTSEL_RET_UNKNOWN;
 	SIMPLE_TEXT_OUTPUT_INTERFACE* COUT = ST->ConOut;
 	UINTN i                            = 0;
 
-	if (!gop_isactive()) return EFI_NOT_READY;
+	if (!gop_isactive()) return BOOTSEL_RET_ERROR;
 
 	create_menu_items(entries, entries_count);
 
@@ -285,14 +286,14 @@ next:
 			// Shutdown system
 			case KEY(0, 'Q'):
 			{
-				status = EFI_ABORTED;
+				retval = BOOTSEL_RET_SHUTDOWN;
 				goto end;
 			}
 
 			// Exit to EFI shell
 			case KEY(0, 'S'):
 			{
-				status = EFI_ABORTED + 100;
+				retval = BOOTSEL_RET_TOEFI;
 				goto end;
 			}
 
@@ -379,7 +380,7 @@ next:
 				}
 				else
 				{
-					status = EFI_SUCCESS;
+					retval = BOOTSEL_RET_BOOT;
 					goto end;
 				}
 			}
@@ -412,7 +413,7 @@ next:
 		else if (s_boot_timeout == 0)
 		{
 			// TODO: Should check that this is not a group
-			status = EFI_SUCCESS;
+			retval = BOOTSEL_RET_BOOT;
 			goto end;
 		}
 	}
@@ -432,7 +433,7 @@ end:
 	}
 	if (s_menu_first) FreePool(s_menu_first);
 
-	return status;
+	return retval;
 }
 
 #ifdef DB_DEBUG

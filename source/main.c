@@ -1,4 +1,4 @@
-#include <efi.h>
+#include "hdr.h"
 #include <efilib.h>
 
 #include "fs/fs.h"
@@ -11,12 +11,13 @@
 
 EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 {
-	EFI_STATUS status              = EFIERR(99);
+	error_t error                  = ERR_OK;
 
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
 
 	UINTN selected_entry           = UINT64_MAX;
+	UINT8 bootsel_retval           = BOOTSEL_RET_UNKNOWN;
 
 	InitializeLib(image, systable);
 
@@ -30,62 +31,55 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	Print(L"\n\n");
 
 	// Load root image
-	status = fs_load_image(image);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to load root image.\n");
-		goto wait_exit;
-	}
+	error = fs_load_image(image);
+	ERR_CHECK(error, END);
 
 	// Load dboot config
-	status = config_load(&config_entries, &config_entries_count);
-	if (EFI_ERROR(status))
+	error = config_load(&config_entries, &config_entries_count);
+	if (error)
 	{
-		Print(L"Failed to load dboot config file.\n");
-		goto wait_exit;
+		ERR_PRINT_STR(L"Failed to load dboot config file");
+		goto end;
 	}
 #ifdef DB_DEBUG
 	config_debuglog(config_entries, config_entries_count);
 #endif
 
 	// Start the GOP
-	status = gop_init();
-	if (EFI_ERROR(status))
+	error = gop_init();
+	ERR_CHECK(error, END);
+
+	// Run and handle boot selector menu
+	bootsel_retval = bootsel_run(&selected_entry, config_entries, config_entries_count);
+	switch (bootsel_retval)
 	{
-		Print(L"Failed to start GOP\n");
-		goto wait_exit;
+		case BOOTSEL_RET_SHUTDOWN:
+		{
+			uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
+			break;
+		}
+		case BOOTSEL_RET_TOEFI:
+		{
+			return EFI_ABORTED;
+		}
+
+		case BOOTSEL_RET_BOOT:
+		{
+			uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
+			uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
+			uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, EFI_YELLOW);
+			gop_printp(0, 0, L"Booting into entry #%d\n\n", selected_entry);
+
+			// Boot into entry
+			error = boot_boot(&config_entries[selected_entry]);
+			ERR_CHECK(error, END);
+		}
+
+		default: goto end;
 	}
 
-	// Display boot selector menu
-	status = bootsel_run(&selected_entry, config_entries, config_entries_count);
-
-	// Handle results from boot selector menu
-	if (status == EFI_ABORTED)
-	{
-		uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
-	}
-	else if (status == EFI_ABORTED + 100)
-	{
-		return EFI_ABORTED;
-	}
-	else if (status == EFI_SUCCESS)
-	{
-		uefi_call_wrapper(ST->ConOut->Reset, 2, ST->ConOut, FALSE);
-		uefi_call_wrapper(ST->ConOut->ClearScreen, 1, ST->ConOut);
-		uefi_call_wrapper(ST->ConOut->SetAttribute, 2, ST->ConOut, EFI_YELLOW);
-		gop_printp(0, 0, L"Booting into entry #%d\n\n", selected_entry);
-
-		// Boot into entry
-		status = boot_boot(&config_entries[selected_entry]);
-		if (EFI_ERROR(status))
-			Print(L"Failed to boot into entry #%d: %d\n", selected_entry, status);
-
-		// If boot was successfull, we will never reach this
-		goto wait_exit;
-	}
-
-wait_exit:
+end:
 	Print(L"\n\nPress any key to exit...\n");
 	WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
-	return status;
+	return EFI_SUCCESS;
 }

@@ -1,7 +1,7 @@
 #ifndef __UTILS_INPUT_H__
 #define __UTILS_INPUT_H__
 
-#include <efi.h>
+#include "hdr.h"
 
 typedef UINT64 key_t;
 

@@ -1,9 +1,9 @@
 #ifndef __VIDEO_GOP_H__
 #define __VIDEO_GOP_H__
 
-#include <efi.h>
+#include "hdr.h"
 
-EFI_STATUS gop_init(void);
+error_t gop_init(void);
 BOOLEAN gop_isactive(void);
 
 VOID gop_print(CHAR16* fmt, ...);

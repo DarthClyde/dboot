@@ -1,7 +1,7 @@
 #ifndef __PROTOS_LINUX_BOOTPARAMS_H__
 #define __PROTOS_LINUX_BOOTPARAMS_H__
 
-#include <efi.h>
+#include "hdr.h"
 
 #define SETUP_HEADER_OFFSET    0x1F1
 #define SETUP_SIGNATURE_OFFSET 0x202

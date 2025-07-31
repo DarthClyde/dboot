@@ -1,7 +1,7 @@
 #ifndef __FS_CONFIG_H__
 #define __FS_CONFIG_H__
 
-#include <efi.h>
+#include "hdr.h"
 
 #define MAX_ENTRIES      16
 #define CONFIG_FILE_PATH L"\\EFI\\DBOOT\\DBOOT.CONF"
@@ -29,8 +29,8 @@ typedef struct config_entry
 	CHAR8* cmdline;
 } config_entry_t;
 
-EFI_STATUS config_load(config_entry_t** entries, UINTN* count);
-EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count);
+error_t config_load(config_entry_t** entries, UINTN* count);
+error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count);
 
 // Debug
 #ifdef DB_DEBUG

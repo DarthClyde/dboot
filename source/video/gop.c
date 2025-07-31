@@ -7,33 +7,24 @@ static EFI_GRAPHICS_OUTPUT_PROTOCOL* s_gop              = NULL;
 static EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* s_gop_info = NULL;
 static UINTN s_gop_info_size                            = 0;
 
-EFI_STATUS gop_init(void)
+error_t gop_init(void)
 {
-	EFI_STATUS status = EFIERR(99);
+	EFI_STATUS status = EFI_SUCCESS;
 	EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 	// Get the GOP protocol
 	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (void**)&s_gop);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Unable to locate GOP protocol\n");
-		goto end;
-	}
+	if (EFI_ERROR(status)) return ERR_VID_GOP_LOCATE;
 
 	// Query the GOP mode info
 	UINT32 modeNum = 0;
 	if (s_gop->Mode != NULL) modeNum = s_gop->Mode->Mode;
+
 	status = uefi_call_wrapper(s_gop->QueryMode, 4, s_gop, modeNum, &s_gop_info_size, &s_gop_info);
-
 	if (status == EFI_NOT_STARTED) status = uefi_call_wrapper(s_gop->SetMode, 2, s_gop, 0);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Unable to get GOP native mode\n");
-		goto end;
-	}
+	if (EFI_ERROR(status)) return ERR_VID_GOP_QUERY;
 
-end:
-	return status;
+	return ERR_OK;
 }
 
 BOOLEAN gop_isactive(void)

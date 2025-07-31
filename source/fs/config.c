@@ -3,9 +3,9 @@
 
 #include <efilib.h>
 
-EFI_STATUS config_load(config_entry_t** entries, UINTN* count)
+error_t config_load(config_entry_t** entries, UINTN* count)
 {
-	EFI_STATUS status = EFIERR(99);
+	error_t error     = ERR_OK;
 
 	file_t* file      = NULL;
 
@@ -16,32 +16,25 @@ EFI_STATUS config_load(config_entry_t** entries, UINTN* count)
 	*count            = 0;
 
 	// Read the config file
-	status = fs_file_open(fs_get_image(), CONFIG_FILE_PATH, &file);
-	status += fs_file_readall(file, (VOID**)&buffer, &buffer_size);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to read dboot config file: %d\n", status);
-		goto end;
-	}
+	error = fs_file_open(fs_get_image(), CONFIG_FILE_PATH, &file);
+	ERR_CHECK(error, END);
+	error = fs_file_readall(file, (VOID**)&buffer, &buffer_size);
+	ERR_CHECK(error, END);
 
 	// Parse the config file
-	status = config_parse(buffer, buffer_size, entries, count);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to load parse config file: %d\n", status);
-		goto end;
-	}
+	error = config_parse(buffer, buffer_size, entries, count);
+	ERR_CHECK(error, END);
 
 end:
 	if (buffer) uefi_call_wrapper(BS->FreePool, 1, buffer);
 	if (file) fs_file_close(file);
 
-	return status;
+	return error;
 }
 
-EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count)
+error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count)
 {
-	EFI_STATUS status              = EFIERR(99);
+	EFI_STATUS status              = EFI_SUCCESS;
 
 	CHAR8* lstart                  = buffer;
 	CHAR8* lend                    = NULL;
@@ -54,11 +47,7 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 	// Allocate entry list
 	status = uefi_call_wrapper(BS->AllocatePool, 3, PoolAllocationType,
 	                           MAX_ENTRIES * sizeof(config_entry_t), (VOID**)&config_entries);
-	if (EFI_ERROR(status))
-	{
-		Print(L"Failed to allocate buffer for entries array: %d\n", status);
-		goto end;
-	}
+	if (EFI_ERROR(status)) return ERR_ALLOC_FAIL;
 
 	// Process config file
 	while (lstart < fend)
@@ -207,10 +196,8 @@ EFI_STATUS config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UIN
 
 	*entries = config_entries;
 	*count   = entry_count;
-	status   = EFI_SUCCESS;
 
-end:
-	return status;
+	return ERR_OK;
 }
 
 #ifdef DB_DEBUG
