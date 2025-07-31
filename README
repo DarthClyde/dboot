@@ -4,6 +4,7 @@ DBOOT is a lightweight, modern, multiprotocol UEFI bootloader.
 It can be easily configured and supports multiple boot protocols.
 
 Currently in very early developement.
+Not recommended for use on bear metal at the moment.
 
 
 Features
@@ -42,11 +43,23 @@ Compile / Install
 2. Compile the EFI application
    $ make
 
-3. Install to boot your partition
-   $ make install DISK=<YOUR_INSTALL_DISK> PART=<YOUR_INSTALL_PARTITION>
+3. Install to your ESP (boot) partition
+   $ make install DISK=<YOUR_ESP_DISK> PART=<YOUR_ESP_PARTITION>
 
-For Example:
-   $ git clone --recursive https://github.com/DarthClyde/dboot
-   $ cd dboot
+4. Create the config file
+   * See the 'Configuring' section
+   $ sudo cp <YOUR_CONFIG> <YOUR_ESP>/EFI/DBOOT/DBOOT.CONF
+
+
+Configuring
+--------------------------------------
+See docs/config.txt for full documentation on dboot's config file.
+Alternatively, run the 'genconfig' python script to generate one for your system.
+
+
+Full Install Example
+--------------------------------------
    $ make
    $ make install DISK=/dev/sda PART=1
+   $ ./genconfig
+   $ sudo cp build/DBOOT.CONF /boot/EFI/DBOOT/DBOOT.CONF

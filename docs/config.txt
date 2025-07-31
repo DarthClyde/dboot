@@ -1,0 +1,40 @@
+DBOOT.CONF Documentation
+--------------------------------------
+
+Terminology:
+  - <ESP> : The EFI partition on your system, usually /boot
+  - entry : A boot option that will appear in the GUI
+  - group : A "folder" that contains multiple entries
+
+Location:
+  The DBOOT configuration file is located at: <ESP>/EFI/DBOOT/DBOOT.CONF
+
+
+Structure
+--------------------------------------
+The config file is made up of entries, which have information on how DBOOT will handle them underneath the header.
+An entry can be a child of a group, which is defined in it's own entry.
+
+Defining an entry:
+  To start a new entry you must define it's header by creating a new line with: '[NAME]', where NAME is what the entry will show up as in the GUI.
+  Any options underneath this header, until a new entry is defined, will be parsed as belonging to it.
+
+  To define an entry as part of a group, the header must contain: '[GROUP/NAME]', where GROUP is the name of the group that the entry will belong to.
+
+Defining a group:
+  Create a header just like any normal entry and define the 'type=group' option underneath. Any other options will be ignored.
+
+
+Options
+--------------------------------------
+An option is a key-value pair that defines a characteristic of an entry. They are located below the entries' header.
+For example: 'key=value'
+
+Generic - Can be defined in any boot entry:
+  - type : The type of entry and boot protocol that will be used.
+           Options: 'linux', or 'group'
+
+Linux - Specific to Linux type entries:
+  - kernel : The path to the kernel bzImage on the <ESP>
+  - module : The path to the initrd / initramfs on the <ESP>
+  - cmdline : The command line argmuents that will be passed to the kernel on startup.
