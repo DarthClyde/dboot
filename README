@@ -1,5 +1,52 @@
 dboot
-=============
+--------------------------------------
+DBOOT is a lightweight, modern, multiprotocol UEFI bootloader.
+It can be easily configured and supports multiple boot protocols.
 
-A lightweight, multiprotocol, UEFI bootloader
 Currently in very early developement.
+
+
+Features
+--------------------------------------
+- Configurable
+- Multiple boot entries
+- GUI selector on boot
+- Multiprotocol
+
+Architectures:
+  - x86_64
+
+Boot Protocols:
+  - Linux
+  - Chainload (In Dev)
+
+Partitioning and Filesystems:
+  - GPT
+  - Unpartitioned
+
+  - FAT32
+  - FAT12/16
+
+
+Prerequisites
+--------------------------------------
+make gcc binutils coreutils efibootmgr
+
+
+Compile / Install
+--------------------------------------
+1. Clone the repository + submodules
+   $ git clone --recursive https://github.com/DarthClyde/dboot
+   $ cd dboot
+
+2. Compile the EFI application
+   $ make
+
+3. Install to boot your partition
+   $ make install DISK=<YOUR_INSTALL_DISK> PART=<YOUR_INSTALL_PARTITION>
+
+For Example:
+   $ git clone --recursive https://github.com/DarthClyde/dboot
+   $ cd dboot
+   $ make
+   $ make install DISK=/dev/sda PART=1
