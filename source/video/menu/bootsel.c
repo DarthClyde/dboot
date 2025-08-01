@@ -71,6 +71,13 @@ inline static VOID draw_static_elements(void)
 	}
 }
 
+inline static VOID setup_defaults(config_global_t* global)
+{
+	// Boot timeout
+	if (global->timeout > 0) s_boot_timeout = global->timeout * 10;
+	else s_boot_timeout = BOOT_TIMEOUT_DISABLED;
+}
+
 inline static VOID create_item_title(CHAR16** title, config_entry_t* entry)
 {
 	// Allocate title string
@@ -227,6 +234,8 @@ UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count, conf
 	if (!gop_isactive()) return BOOTSEL_RET_ERROR;
 
 	create_menu_items(entries, entries_count, global);
+
+	setup_defaults(global);
 
 	if (!s_selected) s_selected = s_menu_iter;
 
@@ -403,7 +412,7 @@ next:
 		if (s_boot_timeout > 0)
 		{
 			if (s_footer) FreePool(s_footer);
-			s_footer        = PoolPrint(L"Booting in %lld seconds.", (s_boot_timeout + 10) / 10);
+			s_footer        = PoolPrint(L"Booting in %lld seconds...", (s_boot_timeout + 10) / 10);
 			s_footer_strlen = StrLen(s_footer);
 
 			uefi_call_wrapper(BS->Stall, 1, 100 * 1000);

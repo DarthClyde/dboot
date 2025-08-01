@@ -35,6 +35,8 @@ For example: 'key=value'
 
 Globals - Can be defined only under the globals header:
   - default : The name of the default entry that will be selected.
+  - timeout : The time, in seconds, before the selected entry is automatically booted.
+              If set to 'false' or any non positive integer, autoboot is disabled.
 
 Generic - Can be defined in any boot entry:
   - type : The type of entry and boot protocol that will be used.
