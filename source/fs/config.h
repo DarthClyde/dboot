@@ -17,6 +17,7 @@ typedef enum : UINT8
 typedef struct config_entry
 {
 	// Entry info
+	CHAR16* ident;
 	CHAR16* name;
 	CHAR16* parent_name;
 
@@ -29,8 +30,14 @@ typedef struct config_entry
 	CHAR8* cmdline;
 } config_entry_t;
 
-error_t config_load(config_entry_t** entries, UINTN* count);
-error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count);
+typedef struct config_global
+{
+	CHAR16* default_entry;
+} config_global_t;
+
+error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* global);
+error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count,
+                     config_global_t* global);
 
 // Debug
 #ifdef DB_DEBUG

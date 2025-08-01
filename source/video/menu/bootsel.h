@@ -13,10 +13,11 @@
 #define BOOTSEL_RET_TOFWUI   101
 #define BOOTSEL_RET_ERROR    UINT8_MAX
 
-UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count);
+UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count,
+                  config_global_t* global);
 
 #ifdef DB_DEBUG
-VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count);
+VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count, config_global_t* global);
 #endif
 
 #endif

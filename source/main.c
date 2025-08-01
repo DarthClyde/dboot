@@ -15,6 +15,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 
 	config_entry_t* config_entries = NULL;
 	UINTN config_entries_count     = 0;
+	config_global_t* config_global = NULL;
 
 	UINTN selected_entry           = UINT64_MAX;
 	UINT8 bootsel_retval           = BOOTSEL_RET_UNKNOWN;
@@ -35,7 +36,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	ERR_CHECK(error, END);
 
 	// Load dboot config
-	error = config_load(&config_entries, &config_entries_count);
+	error = config_load(&config_entries, &config_entries_count, config_global);
 	if (error)
 	{
 		ERR_PRINT_STR(L"Failed to load dboot config file");
@@ -50,7 +51,8 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	ERR_CHECK(error, END);
 
 	// Run and handle boot selector menu
-	bootsel_retval = bootsel_run(&selected_entry, config_entries, config_entries_count);
+	bootsel_retval =
+	    bootsel_run(&selected_entry, config_entries, config_entries_count, config_global);
 	switch (bootsel_retval)
 	{
 		case BOOTSEL_RET_SHUTDOWN:
