@@ -316,6 +316,7 @@ next:
 			}
 
 			// Exit to EFI firmware UI
+			case KEY(0, 's'):
 			case KEY(0, 'S'):
 			{
 				retval = BOOTSEL_RET_TOFWUI;
