@@ -33,6 +33,7 @@ typedef struct config_entry
 typedef struct config_global
 {
 	CHAR16* default_entry;
+	INT64 timeout;
 } config_global_t;
 
 error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* global);

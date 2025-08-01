@@ -44,6 +44,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 	BOOLEAN is_global              = TRUE;
 
 	UINTN entry_count              = 0;
+	CHAR16* strbuf                 = NULL;
 	config_entry_t* config_entries = NULL;
 	config_entry_t* current_entry  = NULL;
 	config_global_t* config_global = NULL;
@@ -175,6 +176,19 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 						for (UINTN i = 0; i < val_len; i++)
 							global->default_entry[i] = (CHAR16)(leql + 1)[i];
 						global->default_entry[val_len] = '\0';
+					}
+
+					// Extract key: timeout
+					if (CompareMem(lstart, "timeout", 7) == 0)
+					{
+						strbuf = AllocatePool((val_len + 1) * sizeof(CHAR16));
+						for (UINTN i = 0; i < val_len; i++) strbuf[i] = (CHAR16)(leql + 1)[i];
+						strbuf[val_len] = '\0';
+
+						if (StrCmp(strbuf, L"false") == 0) global->timeout = -1;
+						else global->timeout = str_to_i64(strbuf);
+
+						FreePool(strbuf);
 					}
 				}
 				else
