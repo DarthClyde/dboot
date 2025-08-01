@@ -290,10 +290,10 @@ next:
 				goto end;
 			}
 
-			// Exit to EFI shell
+			// Exit to EFI firmware UI
 			case KEY(0, 'S'):
 			{
-				retval = BOOTSEL_RET_TOEFI;
+				retval = BOOTSEL_RET_TOFWUI;
 				goto end;
 			}
 

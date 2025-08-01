@@ -55,12 +55,28 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	{
 		case BOOTSEL_RET_SHUTDOWN:
 		{
-			uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_ABORTED, 0, NULL);
+			uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 			break;
 		}
-		case BOOTSEL_RET_TOEFI:
+		case BOOTSEL_RET_TOFWUI:
 		{
-			return EFI_ABORTED;
+			EFI_GUID guid = EFI_GLOBAL_VARIABLE;
+			UINT64 osind  = 0;
+			UINTN size    = 0;
+
+			// Get existing OsIndications variable
+			uefi_call_wrapper(RT->GetVariable, 5, L"OsIndications", &guid, NULL, &size, &osind);
+
+			// Set new OsIndications variable
+			if (osind) osind |= EFI_OS_INDICATIONS_BOOT_TO_FW_UI;
+			else osind = EFI_OS_INDICATIONS_BOOT_TO_FW_UI;
+			uefi_call_wrapper(RT->SetVariable, 5, L"OsIndications", &guid,
+			                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS
+			                      | EFI_VARIABLE_RUNTIME_ACCESS,
+			                  sizeof(osind), &osind);
+
+			uefi_call_wrapper(RT->ResetSystem, 4, EfiResetWarm, EFI_SUCCESS, 0, NULL);
+			break;
 		}
 
 		case BOOTSEL_RET_BOOT:
