@@ -1,5 +1,5 @@
 # Version info
-DBOOT_VERSION = 0.1.1
+DBOOT_VERSION = 0.2.0
 
 # Set target architecture
 ARCH = x86_64

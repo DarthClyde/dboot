@@ -24,11 +24,17 @@ Defining an entry:
 Defining a group:
   Create a header just like any normal entry and define the 'type=group' option underneath. Any other options will be ignored.
 
+Defining globals:
+  Create a header just like any normal entry but leave the name blank: '[]'. Any non-global options under this header will be ignored.
+
 
 Options
 --------------------------------------
 An option is a key-value pair that defines a characteristic of an entry. They are located below the entries' header.
 For example: 'key=value'
+
+Globals - Can be defined only under the globals header:
+  - default : The name of the default entry that will be selected.
 
 Generic - Can be defined in any boot entry:
   - type : The type of entry and boot protocol that will be used.

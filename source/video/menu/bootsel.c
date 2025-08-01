@@ -124,7 +124,8 @@ inline static VOID populate_item(menu_item_t* item, config_entry_t* entry, UINTN
 	item->next         = NULL;
 }
 
-inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_count)
+inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_count,
+                                     config_global_t* global)
 {
 	menu_item_t* last_item  = NULL;
 	menu_item_t* last_child = NULL;
@@ -139,24 +140,37 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 		s_menu_iter = AllocatePool(sizeof(menu_item_t));
 		populate_item(s_menu_iter, &entries[i], i);
 
+		// Check if current item matches default
+		if (StrCmp(entries[i].ident, global->default_entry) == 0)
+		{
+			s_selected = s_menu_iter;
+		}
+
 		// Handle groups
 		if (entries[i].type == ENTRY_TYPE_GROUP)
 		{
-			CHAR16* parent_name = entries[i].name;
-			INTN num_children   = 0;
+			INTN num_children = 0;
 
 			// Find children of group
 			for (UINTN j = 0; j < entries_count; j++)
 			{
 				if (j == i) continue;
 
-				if (StrCmp(parent_name, entries[j].parent_name) == 0)
+				if (StrCmp(entries[i].name, entries[j].parent_name) == 0)
 				{
 					menu_item_t* child = AllocatePool(sizeof(menu_item_t));
 					populate_item(child, &entries[j], j);
 
 					child->is_child = TRUE;
 					child->parent   = s_menu_iter;
+
+					// Check if current child matches default
+					if (StrCmp(entries[j].ident, global->default_entry) == 0)
+					{
+						s_selected               = child;
+						s_menu_iter->is_expanded = TRUE;
+						s_menu_iter->title[1]    = '-';
+					}
 
 					// There is a previous child
 					if (last_child)
@@ -203,7 +217,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 	s_menu_iter = s_menu_first;
 }
 
-UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count)
+UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count, config_global_t* global)
 {
 	EFI_STATUS status                  = EFI_SUCCESS;
 	UINT8 retval                       = BOOTSEL_RET_UNKNOWN;
@@ -212,10 +226,9 @@ UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count)
 
 	if (!gop_isactive()) return BOOTSEL_RET_ERROR;
 
-	create_menu_items(entries, entries_count);
+	create_menu_items(entries, entries_count, global);
 
-	// TODO: Read defaults from config
-	s_selected = s_menu_iter;
+	if (!s_selected) s_selected = s_menu_iter;
 
 redraw:
 	// Setup menu
@@ -437,7 +450,7 @@ end:
 }
 
 #ifdef DB_DEBUG
-VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count)
+VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count, config_global_t* global)
 {
 	SIMPLE_TEXT_OUTPUT_INTERFACE* COUT = ST->ConOut;
 
@@ -449,7 +462,7 @@ VOID bootsel_debuglog(config_entry_t* entries, UINTN entries_count)
 	uefi_call_wrapper(COUT->OutputString, 2, COUT, L" ");
 	uefi_call_wrapper(COUT->ClearScreen, 1, COUT);
 
-	create_menu_items(entries, entries_count);
+	create_menu_items(entries, entries_count, global);
 
 	while (s_menu_iter != NULL)
 	{
