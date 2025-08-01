@@ -10,7 +10,7 @@
 #define BOOTSEL_RET_UNKNOWN  0
 #define BOOTSEL_RET_BOOT     1
 #define BOOTSEL_RET_SHUTDOWN 100
-#define BOOTSEL_RET_TOEFI    101
+#define BOOTSEL_RET_TOFWUI   101
 #define BOOTSEL_RET_ERROR    UINT8_MAX
 
 UINT8 bootsel_run(UINTN* sel, config_entry_t* entries, UINTN entries_count);
