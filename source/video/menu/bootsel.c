@@ -296,7 +296,10 @@ next:
 
 		// Draw footer string
 		if (s_footer)
-			gop_printpc((s_columns - s_footer_strlen) / 2, s_rows - 1, DEFAULT_COLOR, s_footer);
+		{
+			gop_printpc(0, s_rows - 1, DEFAULT_COLOR, s_clearline + 1);
+			gop_printp((s_columns - s_footer_strlen) / 2, s_rows - 1, s_footer);
+		}
 
 		// Handle key events
 		key_t key = input_get_keypress();
