@@ -33,6 +33,13 @@ end:
 	return error;
 }
 
+#define EXTRACT_STR(TYPE, VAR)                                            \
+	{                                                                     \
+		VAR = mem_alloc_pool((val_len + 1) * sizeof(TYPE));               \
+		for (UINTN i = 0; i < val_len; i++) VAR[i] = (TYPE)(leql + 1)[i]; \
+		VAR[val_len] = '\0';                                              \
+	}
+
 error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count,
                      config_global_t* global)
 {
@@ -167,19 +174,12 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				{
 					// Extract key: default
 					if (CompareMem(lstart, "default", 7) == 0)
-					{
-						global->default_entry = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
-						for (UINTN i = 0; i < val_len; i++)
-							global->default_entry[i] = (CHAR16)(leql + 1)[i];
-						global->default_entry[val_len] = '\0';
-					}
+						EXTRACT_STR(CHAR16, global->default_entry)
 
 					// Extract key: timeout
 					if (CompareMem(lstart, "timeout", 7) == 0)
 					{
-						strbuf = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
-						for (UINTN i = 0; i < val_len; i++) strbuf[i] = (CHAR16)(leql + 1)[i];
-						strbuf[val_len] = '\0';
+						EXTRACT_STR(CHAR16, strbuf)
 
 						if (StrCmp(strbuf, L"false") == 0) global->timeout = -1;
 						else global->timeout = str_to_i64(strbuf);
@@ -189,7 +189,6 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				}
 				else
 				{
-
 					// Extract key: type
 					if (CompareMem(lstart, "type", 4) == 0)
 					{
@@ -203,30 +202,15 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 
 					// Extract key: kernel
 					else if (CompareMem(lstart, "kernel", 6) == 0)
-					{
-						current_entry->kernel_path = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
-						for (UINTN i = 0; i < val_len; i++)
-							current_entry->kernel_path[i] = (CHAR16)(leql + 1)[i];
-						current_entry->kernel_path[val_len] = '\0';
-					}
+						EXTRACT_STR(CHAR16, current_entry->kernel_path)
 
 					// Extract key: module
 					else if (CompareMem(lstart, "module", 6) == 0)
-					{
-						current_entry->module_path = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
-						for (UINTN i = 0; i < val_len; i++)
-							current_entry->module_path[i] = (CHAR16)(leql + 1)[i];
-						current_entry->module_path[val_len] = '\0';
-					}
+						EXTRACT_STR(CHAR16, current_entry->module_path)
 
 					// Extract key: cmdline
 					else if (CompareMem(lstart, "cmdline", 7) == 0)
-					{
-						current_entry->cmdline = mem_alloc_pool((val_len + 1) * sizeof(CHAR8));
-						for (UINTN i = 0; i < val_len; i++)
-							current_entry->cmdline[i] = (CHAR8)(leql + 1)[i];
-						current_entry->cmdline[val_len] = '\0';
-					}
+						EXTRACT_STR(CHAR8, current_entry->cmdline)
 				}
 			}
 		}
@@ -243,6 +227,8 @@ mov_next:
 
 	return ERR_OK;
 }
+
+#undef EXTRACT_STR
 
 #ifdef DB_DEBUG
 VOID config_debuglog(config_entry_t* entries, UINTN count)
