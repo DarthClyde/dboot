@@ -53,7 +53,7 @@ inline static VOID draw_static_elements(void)
 
 	// Draw help
 	{
-		static const UINTN help_strlen = 58;
+		static const UINTN help_strlen = 32;
 		uefi_call_wrapper(ST->ConOut->SetCursorPosition, 3, ST->ConOut,
 		                  (s_columns - help_strlen) / 2, s_top + 1);
 
@@ -62,12 +62,12 @@ inline static VOID draw_static_elements(void)
 		gop_print(L"    ");
 		gop_printc(ACCENT_COLOR, L"ENTER");
 		gop_printc(DEFAULT_COLOR, L" - Select");
-		gop_print(L"    ");
-		gop_printc(ACCENT_COLOR, L"E");
-		gop_printc(DEFAULT_COLOR, L" - Edit");
-		gop_print(L"    ");
-		gop_printc(ACCENT_COLOR, L"C");
-		gop_printc(DEFAULT_COLOR, L" - Custom");
+		// gop_print(L"    ");
+		// gop_printc(ACCENT_COLOR, L"E");
+		// gop_printc(DEFAULT_COLOR, L" - Edit");
+		// gop_print(L"    ");
+		// gop_printc(ACCENT_COLOR, L"C");
+		// gop_printc(DEFAULT_COLOR, L" - Custom");
 	}
 }
 
