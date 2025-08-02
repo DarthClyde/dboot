@@ -36,7 +36,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	ERR_CHECK(error, END);
 
 	// Load dboot config
-	error = config_load(&config_entries, &config_entries_count, config_global);
+	error = config_load(&config_entries, &config_entries_count, &config_global);
 	if (error)
 	{
 		ERR_PRINT_STR(L"Failed to load dboot config file");
