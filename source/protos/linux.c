@@ -142,8 +142,8 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	// Allocate kernel memory
 	while (TRUE)
 	{
-		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData,
-		                           EFI_SIZE_TO_PAGES(kernel_code_size), &kernel_addr);
+		status = mem_alloc_pages(AllocateAddress, EfiLoaderData,
+		                         EFI_SIZE_TO_PAGES(kernel_code_size), &kernel_addr);
 		if (!EFI_ERROR(status)) break;
 
 		if (kernel_addr == 0xFFF00000)
@@ -172,8 +172,8 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 		cmdline_addr = 0xA0000;
 
 		// Allocate memory for cmdline
-		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
-		                           EFI_SIZE_TO_PAGES(cmdline_len + 1), &cmdline_addr);
+		status = mem_alloc_pages(AllocateMaxAddress, EfiLoaderData,
+		                         EFI_SIZE_TO_PAGES(cmdline_len + 1), &cmdline_addr);
 		if (EFI_ERROR(status)) goto end;
 
 		// Copy cmdline to allocated memory
@@ -198,8 +198,8 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 		initrd_addr = 0x3FFFFFFF;
 
 		// Allocate memory for initrd
-		status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
-		                           EFI_SIZE_TO_PAGES(initrd_size), &initrd_addr);
+		status = mem_alloc_pages(AllocateMaxAddress, EfiLoaderData, EFI_SIZE_TO_PAGES(initrd_size),
+		                         &initrd_addr);
 		if (EFI_ERROR(status)) goto end;
 
 		// Read initrd into allocate memory

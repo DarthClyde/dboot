@@ -27,8 +27,8 @@ error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* glo
 	ERR_CHECK(error, END);
 
 end:
-	if (buffer) uefi_call_wrapper(BS->FreePool, 1, buffer);
-	if (file) fs_file_close(file);
+	mem_free_pool(buffer);
+	fs_file_close(file);
 
 	return error;
 }
@@ -36,8 +36,6 @@ end:
 error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count,
                      config_global_t* global)
 {
-	EFI_STATUS status              = EFI_SUCCESS;
-
 	CHAR8* lstart                  = buffer;
 	CHAR8* lend                    = NULL;
 	const CHAR8* fend              = buffer + size;
@@ -50,14 +48,12 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 	config_global_t* config_global = NULL;
 
 	// Allocate entry list
-	status = uefi_call_wrapper(BS->AllocatePool, 3, PoolAllocationType,
-	                           MAX_ENTRIES * sizeof(config_entry_t), (VOID**)&config_entries);
-	if (EFI_ERROR(status)) return ERR_ALLOC_FAIL;
+	config_entries = mem_alloc_pool(MAX_ENTRIES * sizeof(config_entry_t));
+	if (!config_entries) return ERR_ALLOC_FAIL;
 
 	// Allocate global config
-	status = uefi_call_wrapper(BS->AllocatePool, 3, PoolAllocationType, sizeof(config_entry_t),
-	                           (VOID**)&config_global);
-	if (EFI_ERROR(status)) return ERR_ALLOC_FAIL;
+	config_global = mem_alloc_pool(sizeof(config_entry_t));
+	if (!config_global) return ERR_ALLOC_FAIL;
 
 	// Process config file
 	while (lstart < fend)
@@ -95,7 +91,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 			// Set temporary entry identifier
 			{
 				UINTN length         = lend - lstart - 2;
-				current_entry->ident = AllocatePool((length + 1) * sizeof(CHAR16));
+				current_entry->ident = mem_alloc_pool((length + 1) * sizeof(CHAR16));
 
 				for (UINTN i = 0; i < length; i++)
 					current_entry->ident[i] = (CHAR16)(lstart[i + 1]);
@@ -119,13 +115,13 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				{
 					// Set entry name
 					UINTN length        = StrLen(last_slash);
-					current_entry->name = AllocatePool((length + 1) * sizeof(CHAR16));
+					current_entry->name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
 					StrCpy(current_entry->name, last_slash + 1);
 					current_entry->name[length] = '\0';
 
 					// Set parent name
 					length                     = StrLen(current_entry->ident) - length;
-					current_entry->parent_name = AllocatePool((length + 1) * sizeof(CHAR16));
+					current_entry->parent_name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
 					StrnCpy(current_entry->parent_name, current_entry->ident, length);
 					current_entry->parent_name[length] = '\0';
 				}
@@ -135,7 +131,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				{
 					// Set entry name
 					UINTN length        = StrLen(current_entry->ident);
-					current_entry->name = AllocatePool((length + 1) * sizeof(CHAR16));
+					current_entry->name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
 					StrCpy(current_entry->name, current_entry->ident);
 					current_entry->name[length] = '\0';
 
@@ -172,7 +168,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					// Extract key: default
 					if (CompareMem(lstart, "default", 7) == 0)
 					{
-						global->default_entry = AllocatePool((val_len + 1) * sizeof(CHAR16));
+						global->default_entry = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
 						for (UINTN i = 0; i < val_len; i++)
 							global->default_entry[i] = (CHAR16)(leql + 1)[i];
 						global->default_entry[val_len] = '\0';
@@ -181,14 +177,14 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					// Extract key: timeout
 					if (CompareMem(lstart, "timeout", 7) == 0)
 					{
-						strbuf = AllocatePool((val_len + 1) * sizeof(CHAR16));
+						strbuf = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
 						for (UINTN i = 0; i < val_len; i++) strbuf[i] = (CHAR16)(leql + 1)[i];
 						strbuf[val_len] = '\0';
 
 						if (StrCmp(strbuf, L"false") == 0) global->timeout = -1;
 						else global->timeout = str_to_i64(strbuf);
 
-						FreePool(strbuf);
+						mem_free_pool(strbuf);
 					}
 				}
 				else
@@ -208,7 +204,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					// Extract key: kernel
 					else if (CompareMem(lstart, "kernel", 6) == 0)
 					{
-						current_entry->kernel_path = AllocatePool((val_len + 1) * sizeof(CHAR16));
+						current_entry->kernel_path = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
 						for (UINTN i = 0; i < val_len; i++)
 							current_entry->kernel_path[i] = (CHAR16)(leql + 1)[i];
 						current_entry->kernel_path[val_len] = '\0';
@@ -217,7 +213,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					// Extract key: module
 					else if (CompareMem(lstart, "module", 6) == 0)
 					{
-						current_entry->module_path = AllocatePool((val_len + 1) * sizeof(CHAR16));
+						current_entry->module_path = mem_alloc_pool((val_len + 1) * sizeof(CHAR16));
 						for (UINTN i = 0; i < val_len; i++)
 							current_entry->module_path[i] = (CHAR16)(leql + 1)[i];
 						current_entry->module_path[val_len] = '\0';
@@ -226,7 +222,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					// Extract key: cmdline
 					else if (CompareMem(lstart, "cmdline", 7) == 0)
 					{
-						current_entry->cmdline = AllocatePool((val_len + 1) * sizeof(CHAR8));
+						current_entry->cmdline = mem_alloc_pool((val_len + 1) * sizeof(CHAR8));
 						for (UINTN i = 0; i < val_len; i++)
 							current_entry->cmdline[i] = (CHAR8)(leql + 1)[i];
 						current_entry->cmdline[val_len] = '\0';
