@@ -8,7 +8,7 @@
 #ifdef __x86_64__
 typedef VOID (*handover_func)(VOID*, EFI_SYSTEM_TABLE*, struct boot_params*);
 
-static inline VOID linux_efi_handover(struct boot_params* params)
+inline static VOID linux_efi_handover(struct boot_params* params)
 {
 	handover_func handover;
 
@@ -25,7 +25,7 @@ static inline VOID linux_efi_handover(struct boot_params* params)
 }
 #endif
 
-static inline EFI_STATUS validate_setup_header(struct setup_header* setup)
+inline static EFI_STATUS validate_setup_header(struct setup_header* setup)
 {
 	// Ensure EFI handover is supported
 	if (setup->version < 0x20B)

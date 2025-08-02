@@ -40,7 +40,7 @@ end:
 		VAR[val_len] = '\0';                                              \
 	}
 
-static inline VOID set_default_global(config_global_t* global)
+inline static VOID set_default_global(config_global_t* global)
 {
 	if (!global) return;
 
