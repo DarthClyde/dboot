@@ -81,7 +81,7 @@ inline static VOID setup_defaults(config_global_t* global)
 inline static VOID create_item_title(CHAR16** title, config_entry_t* entry)
 {
 	// Allocate title string
-	*title = AllocatePool((MAX_TITLE_LEN + 1) * sizeof(CHAR16));
+	*title = mem_alloc_pool((MAX_TITLE_LEN + 1) * sizeof(CHAR16));
 
 	// Fill title with whitespace
 	for (UINTN j = 0; j < MAX_TITLE_LEN; j++)
@@ -144,7 +144,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 		if (entries[i].parent_name) continue;
 
 		// Create current item
-		s_menu_iter = AllocatePool(sizeof(menu_item_t));
+		s_menu_iter = mem_alloc_pool(sizeof(menu_item_t));
 		populate_item(s_menu_iter, &entries[i], i);
 
 		// Check if current item matches default
@@ -165,7 +165,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 
 				if (StrCmp(entries[i].name, entries[j].parent_name) == 0)
 				{
-					menu_item_t* child = AllocatePool(sizeof(menu_item_t));
+					menu_item_t* child = mem_alloc_pool(sizeof(menu_item_t));
 					populate_item(child, &entries[j], j);
 
 					child->is_child = TRUE;
@@ -264,7 +264,7 @@ redraw:
 		s_top = COUT->Mode->CursorRow;
 
 		// Create clearline string
-		s_clearline = AllocatePool((s_columns + 1) * sizeof(CHAR16));
+		s_clearline = mem_alloc_pool((s_columns + 1) * sizeof(CHAR16));
 		for (i = 0; i < s_columns; i++) s_clearline[i] = ' ';
 		s_clearline[s_columns] = '\0';
 	}
@@ -415,7 +415,7 @@ next:
 		// Update boot timeout
 		if (s_boot_timeout > 0)
 		{
-			if (s_footer) FreePool(s_footer);
+			mem_free_pool(s_footer);
 			s_footer        = PoolPrint(L"Booting in %lld seconds...", (s_boot_timeout + 10) / 10);
 			s_footer_strlen = StrLen(s_footer);
 
@@ -426,7 +426,7 @@ next:
 		// Clear footer and disable boot timeout
 		else if (s_boot_timeout == BOOT_TIMEOUT_CLEARFOOTER)
 		{
-			if (s_footer) FreePool(s_footer);
+			mem_free_pool(s_footer);
 			s_footer        = NULL;
 			s_footer_strlen = 0;
 
@@ -447,17 +447,17 @@ next:
 end:
 	*sel = s_selected->config_index;
 
-	if (s_clearline) FreePool(s_clearline);
-	if (s_footer) FreePool(s_footer);
+	mem_free_pool(s_clearline);
+	mem_free_pool(s_footer);
 
 	s_menu_iter = s_menu_last;
 	while (s_menu_iter != NULL)
 	{
-		if (s_menu_iter->title) FreePool(s_menu_iter->title);
-		if (s_menu_iter->next) FreePool(s_menu_iter->next);
+		mem_free_pool(s_menu_iter->title);
+		mem_free_pool(s_menu_iter->next);
 		s_menu_iter = s_menu_iter->prev;
 	}
-	if (s_menu_first) FreePool(s_menu_first);
+	mem_free_pool(s_menu_first);
 
 	return retval;
 }

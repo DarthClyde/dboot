@@ -53,7 +53,7 @@ error_t fs_file_readall(file_t* file, VOID** buffer, UINTN* size)
 	if (error) goto end;
 
 	// Allocate buffer for file
-	*buffer = AllocatePool(*size);
+	*buffer = mem_alloc_pool(*size);
 	if (!*buffer)
 	{
 		error = ERR_ALLOC_FAIL;
@@ -88,7 +88,7 @@ error_t fs_file_getsize(file_t* file, UINTN* size)
 
 	*size = info->FileSize;
 
-	FreePool(info);
+	mem_free_pool(info);
 	return ERR_OK;
 }
 
@@ -148,7 +148,7 @@ error_t fs_file_close(file_t* file)
 	}
 
 	// Free
-	FreePool(file);
+	mem_free_pool(file);
 	file = NULL;
 
 	return error;
