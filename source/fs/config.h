@@ -36,9 +36,9 @@ typedef struct config_global
 	INT64 timeout;
 } config_global_t;
 
-error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* global);
+error_t config_load(config_entry_t** entries, UINTN* count, config_global_t** global);
 error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count,
-                     config_global_t* global);
+                     config_global_t** global);
 
 // Debug
 #ifdef DB_DEBUG

@@ -43,7 +43,7 @@ static CHAR16* s_clearline       = NULL;
 static CHAR16* s_footer          = NULL;
 static UINT16 s_footer_strlen    = 0;
 
-static INT64 s_boot_timeout      = 5 * 10;
+static INT64 s_boot_timeout      = 0;
 
 inline static VOID draw_static_elements(void)
 {

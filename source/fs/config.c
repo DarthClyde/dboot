@@ -3,7 +3,7 @@
 
 #include <efilib.h>
 
-error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* global)
+error_t config_load(config_entry_t** entries, UINTN* count, config_global_t** global)
 {
 	error_t error     = ERR_OK;
 
@@ -14,7 +14,7 @@ error_t config_load(config_entry_t** entries, UINTN* count, config_global_t* glo
 
 	*entries          = NULL;
 	*count            = 0;
-	global            = NULL;
+	*global           = NULL;
 
 	// Read the config file
 	error = fs_file_open(fs_get_image(), CONFIG_FILE_PATH, &file);
@@ -40,8 +40,16 @@ end:
 		VAR[val_len] = '\0';                                              \
 	}
 
+static inline VOID set_default_global(config_global_t* global)
+{
+	if (!global) return;
+
+	global->default_entry = NULL;
+	global->timeout       = 5;
+}
+
 error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN* count,
-                     config_global_t* global)
+                     config_global_t** global)
 {
 	CHAR8* lstart                  = buffer;
 	CHAR8* lend                    = NULL;
@@ -55,12 +63,13 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 	config_global_t* config_global = NULL;
 
 	// Allocate entry list
-	config_entries = mem_alloc_pool(MAX_ENTRIES * sizeof(config_entry_t));
+	config_entries = mem_alloc_zpool(MAX_ENTRIES * sizeof(config_entry_t));
 	if (!config_entries) return ERR_ALLOC_FAIL;
 
 	// Allocate global config
-	config_global = mem_alloc_pool(sizeof(config_entry_t));
+	config_global = mem_alloc_pool(sizeof(config_global_t));
 	if (!config_global) return ERR_ALLOC_FAIL;
+	set_default_global(config_global);
 
 	// Process config file
 	while (lstart < fend)
@@ -174,15 +183,15 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				{
 					// Extract key: default
 					if (CompareMem(lstart, "default", 7) == 0)
-						EXTRACT_STR(CHAR16, global->default_entry)
+						EXTRACT_STR(CHAR16, config_global->default_entry)
 
 					// Extract key: timeout
-					if (CompareMem(lstart, "timeout", 7) == 0)
+					else if (CompareMem(lstart, "timeout", 7) == 0)
 					{
 						EXTRACT_STR(CHAR16, strbuf)
 
-						if (StrCmp(strbuf, L"false") == 0) global->timeout = -1;
-						else global->timeout = str_to_i64(strbuf);
+						if (StrCmp(strbuf, L"false") == 0) config_global->timeout = -1;
+						else config_global->timeout = str_to_i64(strbuf);
 
 						mem_free_pool(strbuf);
 					}
@@ -223,7 +232,7 @@ mov_next:
 
 	*entries = config_entries;
 	*count   = entry_count;
-	global   = config_global;
+	*global  = config_global;
 
 	return ERR_OK;
 }
