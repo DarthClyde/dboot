@@ -3,10 +3,11 @@
 import os
 import re
 import glob
+import sys
 
 from datetime import datetime
 
-ESP_DIR = "/boot" # TODO: Make this user-defined
+ESP_DIR = None
 OUTPUT_FILE = "build/DBOOT.CONF"
 
 # Scan for initrds maching the kernel file
@@ -148,10 +149,22 @@ def scan_kernels():
 
 # Generate a config file based on the current system
 def generate_config():
+	global ESP_DIR
+
 	print("NOTE: This tool is not perfect and can generate invalid configs.")
 	print("      It is recommended to create your own config manually.")
 	input("Press ENTER to continue...\n")
 
+	# Parse arguments
+	for arg in sys.argv[1:]:
+		if(arg.startswith("ESP=")):
+			ESP_DIR = arg.split("=",1)[1]
+			break
+
+	if ESP_DIR is None:
+		raise Exception("Please define your ESP mount point")
+
+	# Create the config
 	try:
 		kernels = scan_kernels()
 		print(f"Scanning {ESP_DIR} for kernel images...")

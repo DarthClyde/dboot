@@ -44,7 +44,7 @@ Compile / Install
    $ make
 
 3. Install to your ESP (boot) partition
-   $ make install DISK=<YOUR_ESP_DISK> PART=<YOUR_ESP_PARTITION>
+   $ make install DISK=<ESP_DISK> PART=<ESP_PARTITION> ESP=<ESP_MOUNT_POINT>
 
 4. Create the config file
    * See the 'Configuring' section
@@ -60,6 +60,6 @@ Alternatively, run the 'genconfig' python script to generate one for your system
 Full Install Example
 --------------------------------------
    $ make
-   $ make install DISK=/dev/sda PART=1
-   $ ./genconfig
+   $ make install DISK=/dev/sda PART=1 ESP=/boot
+   $ ./genconfig ESP=/boot
    $ sudo cp build/DBOOT.CONF /boot/EFI/DBOOT/DBOOT.CONF

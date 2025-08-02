@@ -1,6 +1,7 @@
 install: all
 	@ $(call check_defined, DISK, Please define install disk)
 	@ $(call check_defined, PART, Please define install partition)
+	@ $(call check_defined, ESP, Please define your ESP mount point)
 
 # Create boot entry if it does not already exist
 	@ $(eval ENTRY_EXISTS := $(shell efibootmgr | grep "$(EFI_ENTRY_NAME)"))
@@ -17,12 +18,14 @@ install: all
 
 # Install DBOOT EFI application
 	@ echo -e $(MSG_INST_EFI)
-	@ sudo install -d /boot/EFI/DBOOT
-	@ sudo install -m 644 $(DBOOT_EFI) /boot/EFI/DBOOT/BOOTX64.EFI
+	@ sudo install -d $(ESP)/EFI/DBOOT
+	@ sudo install -m 644 $(DBOOT_EFI) $(ESP)/EFI/DBOOT/BOOTX64.EFI
 
 	@ echo -e $(MSG_INST_DONE)
 
 uninstall:
+	@ $(call check_defined, ESP, Please define your ESP mount point)
+
 # Get DBOOT EFI entry bootnum
 	@ echo -e $(MSG_UNINST_FINDENTRY)
 	@ $(eval BOOTNUM := $(shell efibootmgr | grep "$(EFI_ENTRY_NAME)" | awk '{print $$1}' | sed 's/Boot//;s/\*//'))
@@ -34,6 +37,6 @@ uninstall:
 
 # Remove DBOOT EFI directory
 	@ echo -e $(MSG_UNINST_EFI)
-	@ sudo rm -rf /boot/EFI/DBOOT
+	@ sudo rm -rf $(ESP)/EFI/DBOOT
 
 	@ echo -e $(MSG_UNINST_DONE)
