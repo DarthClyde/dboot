@@ -168,7 +168,7 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	if (cmdline)
 	{
 		// Set cmdline alloc info
-		cmdline_len  = AsciiStrLen(cmdline);
+		cmdline_len  = strlen_ascii(cmdline);
 		cmdline_addr = 0xA0000;
 
 		// Allocate memory for cmdline
@@ -177,7 +177,7 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 		if (EFI_ERROR(status)) goto end;
 
 		// Copy cmdline to allocated memory
-		CopyMem((VOID*)cmdline_addr, cmdline, cmdline_len);
+		memcpy((VOID*)cmdline_addr, cmdline, cmdline_len);
 		((CHAR8*)cmdline_addr)[cmdline_len] = '\0';
 
 		// Set boot params for cmdline

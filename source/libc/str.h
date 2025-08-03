@@ -3,6 +3,15 @@
 
 #include <efi.h>
 
+INTN strcmp(CHAR16* s1, CHAR16* s2);
+VOID strcpy(CHAR16* dst, CHAR16* src);
+VOID strcpys(CHAR16* dst, CHAR16* src, UINTN len);
+UINTN strlen(CHAR16* str);
+UINTN strlens(CHAR16* str, UINTN len);
+
+INTN strcmp_ascii(CHAR8* s1, CHAR8* s2);
+UINTN strlen_ascii(CHAR8* str);
+
 INT8 str_to_i8(CHAR16* str);
 INT16 str_to_i16(CHAR16* str);
 INT64 str_to_i64(CHAR16* str);

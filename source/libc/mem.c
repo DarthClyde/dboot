@@ -1,35 +1,42 @@
 #include "libc/mem.h"
 
-#include <efilib.h>
-
-VOID* mem_alloc_pool(UINTN size)
+VOID memzero(VOID* buf, UINTN size)
 {
-	VOID* mem;
-	EFI_STATUS status = uefi_call_wrapper(BS->AllocatePool, 3, PoolAllocationType, size, &mem);
-	if (EFI_ERROR(status)) mem = NULL;
-
-	return mem;
+	memset(buf, size, (INTN)0);
 }
 
-VOID* mem_alloc_zpool(UINTN size)
+VOID memset(VOID* buf, UINTN size, INT8 val)
 {
-	VOID* mem = mem_alloc_pool(size);
-	if (mem) ZeroMem(mem, size);
-	return mem;
+	if (!buf) return;
+
+	while (size)
+	{
+		*((INT8*)buf++) = val;
+		size--;
+	}
 }
 
-EFI_STATUS mem_alloc_pages(EFI_ALLOCATE_TYPE type, EFI_MEMORY_TYPE memtype, UINTN pages,
-                           EFI_PHYSICAL_ADDRESS* addr)
+VOID memcpy(VOID* dst, VOID* src, UINTN len)
 {
-	return uefi_call_wrapper(BS->AllocatePages, 4, type, memtype, pages, addr);
+	if (!dst || !src || len == 0) return;
+
+	while (len)
+	{
+		*((INT8*)dst++) = *((INT8*)src++);
+		len--;
+	}
 }
 
-VOID mem_free_pool(VOID* mem)
+INTN memcmp(VOID* s1, VOID* s2, UINTN len)
 {
-	if (mem) uefi_call_wrapper(BS->FreePool, 1, mem);
-}
+	while (len)
+	{
+		INTN diff = *((UINT8*)s1) - *((UINT8*)s2);
+		if (diff != 0) return diff;
 
-VOID mem_free_pages(UINTN pages, EFI_PHYSICAL_ADDRESS addr)
-{
-	uefi_call_wrapper(BS->FreePages, 1, addr, pages);
+		s1++;
+		s2++;
+		len--;
+	}
+	return 0;
 }

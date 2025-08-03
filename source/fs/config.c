@@ -101,7 +101,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 
 			// Get and zero current entry
 			current_entry = &config_entries[entry_count];
-			ZeroMem(current_entry, sizeof(config_entry_t));
+			memzero(current_entry, sizeof(config_entry_t));
 			is_global = FALSE;
 
 			// Set temporary entry identifier
@@ -130,15 +130,15 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				if (last_slash)
 				{
 					// Set entry name
-					UINTN length        = StrLen(last_slash);
+					UINTN length        = strlen(last_slash);
 					current_entry->name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
-					StrCpy(current_entry->name, last_slash + 1);
+					strcpy(current_entry->name, last_slash + 1);
 					current_entry->name[length] = '\0';
 
 					// Set parent name
-					length                     = StrLen(current_entry->ident) - length;
+					length                     = strlen(current_entry->ident) - length;
 					current_entry->parent_name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
-					StrnCpy(current_entry->parent_name, current_entry->ident, length);
+					strcpys(current_entry->parent_name, current_entry->ident, length);
 					current_entry->parent_name[length] = '\0';
 				}
 
@@ -146,9 +146,9 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				else
 				{
 					// Set entry name
-					UINTN length        = StrLen(current_entry->ident);
+					UINTN length        = strlen(current_entry->ident);
 					current_entry->name = mem_alloc_pool((length + 1) * sizeof(CHAR16));
-					StrCpy(current_entry->name, current_entry->ident);
+					strcpy(current_entry->name, current_entry->ident);
 					current_entry->name[length] = '\0';
 
 					// Set parent name
@@ -182,15 +182,15 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				if (is_global)
 				{
 					// Extract key: default
-					if (CompareMem(lstart, "default", 7) == 0)
+					if (memcmp(lstart, "default", 7) == 0)
 						EXTRACT_STR(CHAR16, config_global->default_entry)
 
 					// Extract key: timeout
-					else if (CompareMem(lstart, "timeout", 7) == 0)
+					else if (memcmp(lstart, "timeout", 7) == 0)
 					{
 						EXTRACT_STR(CHAR16, strbuf)
 
-						if (StrCmp(strbuf, L"false") == 0) config_global->timeout = -1;
+						if (strcmp(strbuf, L"false") == 0) config_global->timeout = -1;
 						else config_global->timeout = str_to_i64(strbuf);
 
 						mem_free_pool(strbuf);
@@ -199,26 +199,26 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 				else
 				{
 					// Extract key: type
-					if (CompareMem(lstart, "type", 4) == 0)
+					if (memcmp(lstart, "type", 4) == 0)
 					{
-						if (CompareMem(leql + 1, "group", 5) == 0)
+						if (memcmp(leql + 1, "group", 5) == 0)
 							current_entry->type = ENTRY_TYPE_GROUP;
-						else if (CompareMem(leql + 1, "linux", 5) == 0)
+						else if (memcmp(leql + 1, "linux", 5) == 0)
 							current_entry->type = ENTRY_TYPE_LINUX;
-						else if (CompareMem(leql + 1, "efi", 3) == 0)
+						else if (memcmp(leql + 1, "efi", 3) == 0)
 							current_entry->type = ENTRY_TYPE_EFI;
 					}
 
 					// Extract key: kernel
-					else if (CompareMem(lstart, "kernel", 6) == 0)
+					else if (memcmp(lstart, "kernel", 6) == 0)
 						EXTRACT_STR(CHAR16, current_entry->kernel_path)
 
 					// Extract key: module
-					else if (CompareMem(lstart, "module", 6) == 0)
+					else if (memcmp(lstart, "module", 6) == 0)
 						EXTRACT_STR(CHAR16, current_entry->module_path)
 
 					// Extract key: cmdline
-					else if (CompareMem(lstart, "cmdline", 7) == 0)
+					else if (memcmp(lstart, "cmdline", 7) == 0)
 						EXTRACT_STR(CHAR8, current_entry->cmdline)
 				}
 			}

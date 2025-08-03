@@ -49,7 +49,7 @@ inline static VOID draw_static_elements(void)
 {
 	// Draw header
 	static UINT16 header_str[] = L"dboot " DB_VERSION;
-	gop_printp((s_columns - StrLen(header_str)) / 2, s_top, header_str);
+	gop_printp((s_columns - strlen(header_str)) / 2, s_top, header_str);
 
 	// Draw help
 	{
@@ -92,11 +92,11 @@ inline static VOID create_item_title(CHAR16** title, config_entry_t* entry)
 	// If entry is a group, add tag for it
 	if (entry->type == ENTRY_TYPE_GROUP)
 	{
-		StrnCpy(&(*title)[0], L"[+]", 3);
+		strcpys(&(*title)[0], L"[+]", 3);
 	}
 
 	// Copy entry name to title
-	UINTN name_len = StrLen(entry->name);
+	UINTN name_len = strlen(entry->name);
 	if (name_len > MAX_NAME_LEN) name_len = MAX_NAME_LEN + 3;
 	UINTN offset = (MAX_TITLE_LEN - name_len) / 2;
 
@@ -105,7 +105,7 @@ inline static VOID create_item_title(CHAR16** title, config_entry_t* entry)
 		// Add '...' if (j + 1 > max length)
 		if (j >= MAX_NAME_LEN)
 		{
-			StrnCpy(&(*title)[j + offset], L"...", 3);
+			strcpys(&(*title)[j + offset], L"...", 3);
 			break;
 		}
 
@@ -148,7 +148,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 		populate_item(s_menu_iter, &entries[i], i);
 
 		// Check if current item matches default
-		if (StrCmp(entries[i].ident, global->default_entry) == 0)
+		if (strcmp(entries[i].ident, global->default_entry) == 0)
 		{
 			s_selected = s_menu_iter;
 		}
@@ -163,7 +163,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 			{
 				if (j == i) continue;
 
-				if (StrCmp(entries[i].name, entries[j].parent_name) == 0)
+				if (strcmp(entries[i].name, entries[j].parent_name) == 0)
 				{
 					menu_item_t* child = mem_alloc_pool(sizeof(menu_item_t));
 					populate_item(child, &entries[j], j);
@@ -172,7 +172,7 @@ inline static VOID create_menu_items(config_entry_t* entries, UINTN entries_coun
 					child->parent   = s_menu_iter;
 
 					// Check if current child matches default
-					if (StrCmp(entries[j].ident, global->default_entry) == 0)
+					if (strcmp(entries[j].ident, global->default_entry) == 0)
 					{
 						s_selected               = child;
 						s_menu_iter->is_expanded = TRUE;
@@ -417,7 +417,7 @@ next:
 		{
 			mem_free_pool(s_footer);
 			s_footer        = PoolPrint(L"Booting in %lld seconds...", (s_boot_timeout + 10) / 10);
-			s_footer_strlen = StrLen(s_footer);
+			s_footer_strlen = strlen(s_footer);
 
 			uefi_call_wrapper(BS->Stall, 1, 100 * 1000);
 			s_boot_timeout--;

@@ -18,7 +18,7 @@ EFI_ENTRY_PATH = \EFI\DBOOT\BOOTX64.EFI
 
 # QEMU options
 IMG_SIZE = 200M
-TEST_CONFIG = test
+TEST_CONFIG = advanced
 OVMF_FIRM_PATH = /usr/share/ovmf/x64/OVMF.4m.fd
 HOST_VMLINUZ_PATH = /boot/vmlinuz-linux
 HOST_INITRAMFS_PATH = /boot/initramfs-linux.img
