@@ -1,16 +1,42 @@
 #include "fs/fs.h"
+#include "efibind.h"
 
 #include <efilib.h>
 
 static EFI_LOADED_IMAGE* s_loaded_image = NULL;
+
+static EFI_HANDLE s_current_disk        = NULL;
+
+inline static EFI_STATUS connect_all_controllers()
+{
+	EFI_STATUS status;
+
+	EFI_HANDLE* handle_buffer = NULL;
+	UINTN handle_count        = 0;
+
+	// Get all handles in the system
+	status = gBS->LocateHandleBuffer(AllHandles, NULL, NULL, &handle_count, &handle_buffer);
+	if (EFI_ERROR(status)) return status;
+
+	// Try to connect each controller
+	for (UINTN i = 0; i < handle_count; i++)
+		uefi_call_wrapper(BS->ConnectController, 4, handle_buffer[i], NULL, NULL, TRUE);
+
+	if (handle_buffer) FreePool(handle_buffer);
+	return EFI_SUCCESS;
+}
 
 error_t fs_load_image(EFI_HANDLE image)
 {
 	EFI_STATUS status =
 	    uefi_call_wrapper(BS->OpenProtocol, 6, image, &LoadedImageProtocol, (VOID**)&s_loaded_image,
 	                      image, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-
 	if (EFI_ERROR(status)) return ERR_FS_IMGLD_FAIL;
+
+	// TODO: this should be a general init function
+	// Also move the device list scan here
+	connect_all_controllers();
+
 	return ERR_OK;
 }
 
@@ -94,11 +120,74 @@ error_t fs_file_getsize(file_t* file, UINTN* size)
 
 error_t fs_file_setdisk(file_disk_t type, CHAR16* disk)
 {
-	// TODO
-	return ERR_OK;
+	EFI_STATUS status            = EFI_SUCCESS;
+
+	EFI_HANDLE* handle_buffer    = NULL;
+	UINTN handle_count           = 0;
+
+	EFI_DEVICE_PATH* device_path = NULL;
+
+	switch (type)
+	{
+		// Use boot disk
+		case FILE_DISK_BOOT:
+		{
+			s_current_disk = s_loaded_image->DeviceHandle;
+			return ERR_OK;
+		}
+
+		// Use disk with GUID
+		case FILE_DISK_GUID:
+		{
+			// Get all handles that support filesystems
+			status =
+			    LibLocateHandle(ByProtocol, &BlockIoProtocol, NULL, &handle_count, &handle_buffer);
+			if (EFI_ERROR(status)) break;
+
+			// Normalize disk GUID
+			toupper(disk);
+
+			// Search through all handles
+			for (UINTN i = 0; i < handle_count; i++)
+			{
+				EFI_HANDLE handle = handle_buffer[i];
+
+				// Get device path protocol
+				device_path = DevicePathFromHandle(handle);
+				if (!device_path) continue;
+
+				// Traverse device path nodes a check for GUID
+				EFI_DEVICE_PATH_PROTOCOL* node = NULL;
+				for (node = device_path; !IsDevicePathEnd(node); node = NextDevicePathNode(node))
+				{
+					if (DevicePathType(node) != MEDIA_DEVICE_PATH
+					    || DevicePathSubType(node) != MEDIA_HARDDRIVE_DP)
+						continue;
+
+					// Get disk PART GUID
+					HARDDRIVE_DEVICE_PATH* hd = (HARDDRIVE_DEVICE_PATH*)node;
+					CHAR16 guid_str[37];
+					GuidToString(guid_str, (EFI_GUID*)&hd->Signature);
+
+					// Compare
+					if (strcmp(guid_str, disk) == 0)
+					{
+						mem_free_pool(handle_buffer);
+						s_current_disk = handle;
+						return ERR_OK;
+					}
+				}
+			}
+			break;
+		}
+
+		default: break;
+	}
+
+	return ERR_FS_FILE_SETDISK;
 }
 
-error_t fs_file_open(EFI_LOADED_IMAGE* image, CHAR16* path, file_t** file)
+error_t fs_file_open(CHAR16* path, file_t** file)
 {
 	EFI_STATUS status = EFI_SUCCESS;
 	error_t error     = ERR_OK;
@@ -115,7 +204,7 @@ error_t fs_file_open(EFI_LOADED_IMAGE* image, CHAR16* path, file_t** file)
 	}
 
 	// Open the root volume
-	newfile->root = LibOpenRoot(image->DeviceHandle);
+	newfile->root = LibOpenRoot(s_current_disk);
 	if (!newfile->root)
 	{
 		error = ERR_FS_ROOTLD_FAIL;

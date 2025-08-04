@@ -20,7 +20,7 @@ error_t fs_file_setpos(file_t* file, UINTN pos);
 error_t fs_file_getsize(file_t* file, UINTN* size);
 
 error_t fs_file_setdisk(file_disk_t type, CHAR16* disk);
-error_t fs_file_open(EFI_LOADED_IMAGE* image, CHAR16* path, file_t** file);
+error_t fs_file_open(CHAR16* path, file_t** file);
 error_t fs_file_close(file_t* file);
 
 #endif

@@ -75,7 +75,7 @@ error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cm
 	Print(L"Loading kernel: %s\n", kernel_path->path);
 	error = fs_file_setdisk(kernel_path->disk, kernel_path->mod);
 	ERR_CHECK(error, END);
-	error = fs_file_open(fs_get_image(), kernel_path->path, &file);
+	error = fs_file_open(kernel_path->path, &file);
 	ERR_CHECK(error, END);
 
 	// Validate kernel signature
@@ -193,7 +193,7 @@ error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cm
 		Print(L"\nLoading initrd: %s\n", initrd_path->path);
 		error = fs_file_setdisk(initrd_path->disk, initrd_path->mod);
 		ERR_CHECK(error, END);
-		error = fs_file_open(fs_get_image(), initrd_path->path, &file);
+		error = fs_file_open(initrd_path->path, &file);
 		ERR_CHECK(error, END);
 
 		// Get the initrd size
