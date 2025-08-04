@@ -49,7 +49,7 @@ inline static EFI_STATUS validate_setup_header(struct setup_header* setup)
 	return EFI_SUCCESS;
 }
 
-error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
+error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cmdline)
 {
 	EFI_STATUS status                 = EFI_SUCCESS;
 	error_t error                     = ERR_OK;
@@ -72,8 +72,10 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	EFI_PHYSICAL_ADDRESS cmdline_addr = 0x0;
 
 	// Open the kernel bzImage
-	Print(L"Loading kernel: %s\n", kernel_path);
-	error = fs_file_open(fs_get_image(), kernel_path, &file);
+	Print(L"Loading kernel: %s\n", kernel_path->path);
+	error = fs_file_setdisk(kernel_path->disk, kernel_path->mod);
+	ERR_CHECK(error, END);
+	error = fs_file_open(fs_get_image(), kernel_path->path, &file);
 	ERR_CHECK(error, END);
 
 	// Validate kernel signature
@@ -188,8 +190,10 @@ error_t linux_boot(CHAR16* kernel_path, CHAR16* initrd_path, CHAR8* cmdline)
 	if (initrd_path)
 	{
 		// Open the initrd file
-		Print(L"\nLoading initrd: %s\n", initrd_path);
-		error = fs_file_open(fs_get_image(), initrd_path, &file);
+		Print(L"\nLoading initrd: %s\n", initrd_path->path);
+		error = fs_file_setdisk(initrd_path->disk, initrd_path->mod);
+		ERR_CHECK(error, END);
+		error = fs_file_open(fs_get_image(), initrd_path->path, &file);
 		ERR_CHECK(error, END);
 
 		// Get the initrd size

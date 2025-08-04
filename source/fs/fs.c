@@ -92,6 +92,12 @@ error_t fs_file_getsize(file_t* file, UINTN* size)
 	return ERR_OK;
 }
 
+error_t fs_file_setdisk(file_disk_t type, CHAR16* disk)
+{
+	// TODO
+	return ERR_OK;
+}
+
 error_t fs_file_open(EFI_LOADED_IMAGE* image, CHAR16* path, file_t** file)
 {
 	EFI_STATUS status = EFI_SUCCESS;

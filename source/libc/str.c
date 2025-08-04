@@ -25,12 +25,8 @@ VOID strcpy(CHAR16* dst, CHAR16* src)
 
 VOID strcpys(CHAR16* dst, CHAR16* src, UINTN len)
 {
-	UINTN size = strlens(src, len);
-	if (size != len)
-	{
-		memset(dst + size, (UINTN)((len - size) * sizeof(CHAR16)), (UINT8)'\0');
-	}
 	memcpy(dst, src, len * sizeof(CHAR16));
+	dst[len] = '\0';
 }
 
 UINTN strlen(CHAR16* str)
@@ -49,6 +45,16 @@ UINTN strlens(CHAR16* str, UINTN len)
 	UINTN i;
 	for (i = 0; *str && i < len; i++) str++;
 	return i;
+}
+
+CHAR16* strchr(CHAR16* str, CHAR16 ch)
+{
+	while (*str)
+	{
+		if (*str == ch) return str;
+		str++;
+	}
+	return NULL;
 }
 
 INTN strcmp_ascii(CHAR8* s1, CHAR8* s2)
