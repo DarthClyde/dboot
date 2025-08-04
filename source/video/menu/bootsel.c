@@ -74,7 +74,7 @@ inline static VOID draw_static_elements(void)
 inline static VOID setup_defaults(config_global_t* global)
 {
 	// Boot timeout
-	if (global->timeout > 0) s_boot_timeout = global->timeout * 10;
+	if (global->timeout >= 0) s_boot_timeout = global->timeout * 10;
 	else s_boot_timeout = BOOT_TIMEOUT_DISABLED;
 }
 
