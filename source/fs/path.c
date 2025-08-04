@@ -56,6 +56,11 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		strcpys(strbuf, path_raw, len);
 
 		path->disk = str_to_filedisk(strbuf);
+		if (path->disk == FILE_DISK_UNKNOWN)
+		{
+			error = ERR_PATH_NODISK;
+			goto end;
+		}
 
 		mem_free_pool(strbuf);
 	}
