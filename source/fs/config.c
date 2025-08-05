@@ -17,7 +17,7 @@ error_t config_load(config_entry_t** entries, UINTN* count, config_global_t** gl
 	*global           = NULL;
 
 	// Read the config file
-	error = fs_file_setdisk(FILE_DISK_BOOT, NULL);
+	error = fs_setpart(PART_TYPE_BOOT, NULL);
 	ERR_CHECK(error, END);
 	error = fs_file_open(CONFIG_FILE_PATH, &file);
 	ERR_CHECK(error, END);

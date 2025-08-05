@@ -14,7 +14,7 @@ typedef struct partition
 	CHAR16 guid[GUID_SIZE];
 } partition_t;
 
-error_t part_init(EFI_HANDLE rootpart);
+error_t part_init(EFI_HANDLE bootpart);
 #ifdef DB_DEBUG
 VOID part_table_debuglog(void);
 #endif

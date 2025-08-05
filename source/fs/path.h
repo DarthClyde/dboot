@@ -3,17 +3,17 @@
 
 #include "hdr.h"
 
-typedef enum file_disk
+typedef enum part_type
 {
-	FILE_DISK_UNKNOWN = 0,
+	PART_TYPE_UNKNOWN = 0,
 
-	FILE_DISK_BOOT,
-	FILE_DISK_GUID
-} file_disk_t;
+	PART_TYPE_BOOT,
+	PART_TYPE_GUID
+} part_type_t;
 
 typedef struct file_path
 {
-	file_disk_t disk;
+	part_type_t type;
 	CHAR16* mod;
 
 	CHAR16* path;

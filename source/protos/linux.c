@@ -73,7 +73,7 @@ error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cm
 
 	// Open the kernel bzImage
 	Print(L"Loading kernel: %s\n", kernel_path->path);
-	error = fs_file_setdisk(kernel_path->disk, kernel_path->mod);
+	error = fs_setpart(kernel_path->type, kernel_path->mod);
 	ERR_CHECK(error, END);
 	error = fs_file_open(kernel_path->path, &file);
 	ERR_CHECK(error, END);
@@ -191,7 +191,7 @@ error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cm
 	{
 		// Open the initrd file
 		Print(L"\nLoading initrd: %s\n", initrd_path->path);
-		error = fs_file_setdisk(initrd_path->disk, initrd_path->mod);
+		error = fs_setpart(initrd_path->type, initrd_path->mod);
 		ERR_CHECK(error, END);
 		error = fs_file_open(initrd_path->path, &file);
 		ERR_CHECK(error, END);

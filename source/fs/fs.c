@@ -13,7 +13,8 @@ inline static EFI_STATUS connect_all_controllers()
 	UINTN handle_count        = 0;
 
 	// Get all handles in the system
-	status = gBS->LocateHandleBuffer(AllHandles, NULL, NULL, &handle_count, &handle_buffer);
+	status = uefi_call_wrapper(BS->LocateHandleBuffer, 5, AllHandles, NULL, NULL, &handle_count,
+	                           &handle_buffer);
 	if (EFI_ERROR(status)) return status;
 
 	// Try to connect each controller
@@ -24,14 +25,46 @@ inline static EFI_STATUS connect_all_controllers()
 	return EFI_SUCCESS;
 }
 
-error_t fs_init(EFI_HANDLE image)
+error_t fs_init(EFI_HANDLE bootpart)
 {
-	connect_all_controllers();
-	part_init(image);
+	EFI_STATUS status = EFI_SUCCESS;
+	error_t error     = ERR_OK;
 
-	fs_file_setdisk(FILE_DISK_BOOT, NULL);
+	status            = connect_all_controllers();
+	if (EFI_ERROR(status)) return ERR_UNKNOWN;
+
+	error = part_init(bootpart);
+	if (error) return error;
+
+	error = fs_setpart(PART_TYPE_BOOT, NULL);
+	if (error) return error;
 
 	return ERR_OK;
+}
+
+error_t fs_setpart(part_type_t type, CHAR16* mod)
+{
+	switch (type)
+	{
+		// Use boot partition
+		case PART_TYPE_BOOT:
+		{
+			s_current_part = part_get_boot();
+			return ERR_OK;
+		}
+
+		// Use partition from GUID
+		case PART_TYPE_GUID:
+		{
+			toupper(mod);
+			s_current_part = part_get_from_guid(mod);
+			return ERR_OK;
+		}
+
+		default: break;
+	}
+
+	return ERR_FS_FILE_SETPART;
 }
 
 error_t fs_file_read(file_t* file, UINTN* size, VOID* buffer)
@@ -107,31 +140,6 @@ error_t fs_file_getsize(file_t* file, UINTN* size)
 	return ERR_OK;
 }
 
-error_t fs_file_setdisk(file_disk_t type, CHAR16* disk)
-{
-	switch (type)
-	{
-		// Use boot partition
-		case FILE_DISK_BOOT:
-		{
-			s_current_part = part_get_boot();
-			return ERR_OK;
-		}
-
-		// Use partition from GUID
-		case FILE_DISK_GUID:
-		{
-			toupper(disk);
-			s_current_part = part_get_from_guid(disk);
-			return ERR_OK;
-		}
-
-		default: break;
-	}
-
-	return ERR_FS_FILE_SETDISK;
-}
-
 error_t fs_file_open(CHAR16* path, file_t** file)
 {
 	EFI_STATUS status = EFI_SUCCESS;
@@ -148,16 +156,16 @@ error_t fs_file_open(CHAR16* path, file_t** file)
 		goto end;
 	}
 
-	// Open the volume
-	newfile->root = LibOpenRoot(s_current_part->handle);
-	if (!newfile->root)
+	// Open the partition
+	newfile->part = LibOpenRoot(s_current_part->handle);
+	if (!newfile->part)
 	{
 		error = ERR_FS_PARTLD_FAIL;
 		goto end;
 	}
 
 	// Open the file
-	status = uefi_call_wrapper(newfile->root->Open, 5, newfile->root, &newfile->handle, path,
+	status = uefi_call_wrapper(newfile->part->Open, 5, newfile->part, &newfile->handle, path,
 	                           EFI_FILE_MODE_READ, 0);
 	if (EFI_ERROR(status)) error = ERR_FS_FILE_READ;
 
@@ -181,9 +189,9 @@ error_t fs_file_close(file_t* file)
 		status = uefi_call_wrapper(file->handle->Close, 1, file->handle);
 		if (EFI_ERROR(status)) error = ERR_FS_FILE_CLOSE;
 	}
-	if (file->root)
+	if (file->part)
 	{
-		status = uefi_call_wrapper(file->root->Close, 1, file->root);
+		status = uefi_call_wrapper(file->part->Close, 1, file->part);
 		if (EFI_ERROR(status)) error = ERR_FS_FILE_CLOSE;
 	}
 

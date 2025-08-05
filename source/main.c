@@ -31,7 +31,7 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	      " at "__TIME__);
 	Print(L"\n\n");
 
-	// Load root image
+	// Start filesystem
 	error = fs_init(image);
 	ERR_CHECK(error, END);
 #ifdef DB_DEBUG

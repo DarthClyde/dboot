@@ -2,11 +2,12 @@
 
 #include <efilib.h>
 
-inline static file_disk_t str_to_filedisk(CHAR16* str)
+inline static part_type_t str_to_parttype(CHAR16* str)
 {
-	if (strcmp(str, L"BOOT") == 0) return FILE_DISK_BOOT;
-	else if (strcmp(str, L"GUID") == 0) return FILE_DISK_GUID;
-	else return FILE_DISK_UNKNOWN;
+	if (strcmp(str, L"BOOT") == 0) return PART_TYPE_BOOT;
+	else if (strcmp(str, L"GUID") == 0) return PART_TYPE_GUID;
+
+	else return PART_TYPE_UNKNOWN;
 }
 
 error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
@@ -29,7 +30,7 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 	if (!path) return ERR_ALLOC_FAIL;
 
 	// Set defaults
-	path->disk = FILE_DISK_UNKNOWN;
+	path->type = PART_TYPE_UNKNOWN;
 	path->mod  = NULL;
 	path->path = NULL;
 
@@ -49,14 +50,14 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		goto end;
 	}
 
-	// Extract path disk
+	// Extract path partition type
 	{
 		len    = typesep - path_raw;
 		strbuf = mem_alloc_pool((len + 1) * sizeof(CHAR16));
 		strcpys(strbuf, path_raw, len);
 
-		path->disk = str_to_filedisk(strbuf);
-		if (path->disk == FILE_DISK_UNKNOWN)
+		path->type = str_to_parttype(strbuf);
+		if (path->type == PART_TYPE_UNKNOWN)
 		{
 			error = ERR_PATH_NODISK;
 			goto end;
@@ -65,7 +66,7 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		mem_free_pool(strbuf);
 	}
 
-	// Extract path modifer
+	// Extract path partition modifer
 	{
 		len = pathsep - (typesep + 1);
 		if (len > 0)
