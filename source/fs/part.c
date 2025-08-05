@@ -60,9 +60,9 @@ error_t part_init(EFI_HANDLE bootpart)
 		device_path = DevicePathFromHandle(handle);
 		if (!device_path) continue;
 
-		// Traverse device nodes:
+		// Traverse device path nodes:
 		//   We are assuming there will only be one valid node per handle.
-		//   If there is more than one, only the first will be registered.
+		//   If there is more than one, only the first will be recognized.
 		EFI_DEVICE_PATH_PROTOCOL* node = NULL;
 		for (node = device_path; !IsDevicePathEnd(node); node = NextDevicePathNode(node))
 		{
@@ -96,14 +96,14 @@ end:
 	// If boot partition was not found, create it from the system image
 	if (!s_boot_part)
 	{
-		EFI_LOADED_IMAGE* img;
+		EFI_LOADED_IMAGE* img = NULL;
 		uefi_call_wrapper(BS->OpenProtocol, 6, bootpart, &LoadedImageProtocol, (VOID**)&img,
 		                  bootpart, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 
 		s_boot_part         = mem_alloc_zpool(sizeof(partition_t));
 		s_boot_part->handle = img->DeviceHandle;
 
-		uefi_call_wrapper(BS->CloseProtocol, 3, bootpart, &LoadedImageProtocol, bootpart, NULL);
+		uefi_call_wrapper(BS->CloseProtocol, 4, bootpart, &LoadedImageProtocol, bootpart, NULL);
 	}
 
 	return error;

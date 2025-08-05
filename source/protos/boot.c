@@ -12,8 +12,8 @@ error_t boot_boot(config_entry_t* config)
 	{
 		case ENTRY_TYPE_LINUX:
 		{
-			file_path_t* kernel_path = NULL;
-			file_path_t* initrd_path = NULL;
+			path_t* kernel_path = NULL;
+			path_t* initrd_path = NULL;
 
 			// Parse kernel path
 			error = path_parse(config->kernel_path, &kernel_path);

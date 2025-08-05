@@ -7,6 +7,7 @@ static partition_t* s_current_part = NULL;
 
 inline static EFI_STATUS connect_all_controllers()
 {
+	// TODO: there is probably a better way to do this
 	EFI_STATUS status;
 
 	EFI_HANDLE* handle_buffer = NULL;
@@ -21,7 +22,7 @@ inline static EFI_STATUS connect_all_controllers()
 	for (UINTN i = 0; i < handle_count; i++)
 		uefi_call_wrapper(BS->ConnectController, 4, handle_buffer[i], NULL, NULL, TRUE);
 
-	if (handle_buffer) FreePool(handle_buffer);
+	if (handle_buffer) mem_free_pool(handle_buffer);
 	return EFI_SUCCESS;
 }
 
@@ -30,12 +31,15 @@ error_t fs_init(EFI_HANDLE bootpart)
 	EFI_STATUS status = EFI_SUCCESS;
 	error_t error     = ERR_OK;
 
-	status            = connect_all_controllers();
+	// Start all controllers
+	status = connect_all_controllers();
 	if (EFI_ERROR(status)) return ERR_UNKNOWN;
 
+	// Initialize partition table
 	error = part_init(bootpart);
 	if (error) return error;
 
+	// Set boot partition as default
 	error = fs_setpart(PART_TYPE_BOOT, NULL);
 	if (error) return error;
 
@@ -50,7 +54,7 @@ error_t fs_setpart(part_type_t type, CHAR16* mod)
 		case PART_TYPE_BOOT:
 		{
 			s_current_part = part_get_boot();
-			return ERR_OK;
+			break;
 		}
 
 		// Use partition from GUID
@@ -58,13 +62,13 @@ error_t fs_setpart(part_type_t type, CHAR16* mod)
 		{
 			toupper(mod);
 			s_current_part = part_get_from_guid(mod);
-			return ERR_OK;
+			break;
 		}
 
-		default: break;
+		default: return ERR_FS_PARTLD_FAIL;
 	}
 
-	return ERR_FS_FILE_SETPART;
+	return ERR_OK;
 }
 
 error_t fs_file_read(file_t* file, UINTN* size, VOID* buffer)

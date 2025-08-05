@@ -49,7 +49,7 @@ inline static EFI_STATUS validate_setup_header(struct setup_header* setup)
 	return EFI_SUCCESS;
 }
 
-error_t linux_boot(file_path_t* kernel_path, file_path_t* initrd_path, CHAR8* cmdline)
+error_t linux_boot(path_t* kernel_path, path_t* initrd_path, CHAR8* cmdline)
 {
 	EFI_STATUS status                 = EFI_SUCCESS;
 	error_t error                     = ERR_OK;

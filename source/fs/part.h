@@ -3,7 +3,7 @@
 
 #include "hdr.h"
 
-#define GUID_SIZE 37
+#define GUID_LEN 37
 
 typedef struct partition
 {
@@ -11,7 +11,7 @@ typedef struct partition
 	UINT8 sigtype;
 
 	UINT32 partnum;
-	CHAR16 guid[GUID_SIZE];
+	CHAR16 guid[GUID_LEN];
 } partition_t;
 
 error_t part_init(EFI_HANDLE bootpart);

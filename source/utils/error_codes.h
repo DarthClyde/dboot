@@ -19,7 +19,7 @@ ERR(ERR_FS_FILE_READ, L"Failed to read file")
 ERR(ERR_FS_FILE_SETPOS, L"Failed to set file position")
 ERR(ERR_FS_FILE_FILEINFO, L"Failed to get file info")
 
-ERR(ERR_PATH_NODISK, L"Failed to find the file disk")
+ERR(ERR_PATH_NOPTYPE, L"Failed to find the file partition type")
 ERR(ERR_PATH_NOPATH, L"Failed to find the file path")
 
 ERR(ERR_BOOT_UNSUPPORTED, L"Unsupported boot protocol")

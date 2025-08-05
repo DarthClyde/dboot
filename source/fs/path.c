@@ -10,35 +10,30 @@ inline static part_type_t str_to_parttype(CHAR16* str)
 	else return PART_TYPE_UNKNOWN;
 }
 
-error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
+error_t path_parse(CHAR16* path_raw, path_t** path)
 {
 	if (!path_raw) return ERR_INVALID_PARAM;
 
-	file_path_t* path = NULL;
-	error_t error     = ERR_OK;
+	path_t* newpath = NULL;
+	error_t error   = ERR_OK;
 
-	CHAR16* typesep   = NULL;
-	CHAR16* pathsep   = NULL;
+	CHAR16* typesep = NULL;
+	CHAR16* pathsep = NULL;
 
-	CHAR16* strbuf    = NULL;
-	UINTN len         = 0;
+	CHAR16* strbuf  = NULL;
+	UINTN len       = 0;
 
-	*file_path        = NULL;
+	*path           = NULL;
 
 	// Allocate file path
-	path = mem_alloc_pool(sizeof(file_path_t));
-	if (!path) return ERR_ALLOC_FAIL;
-
-	// Set defaults
-	path->type = PART_TYPE_UNKNOWN;
-	path->mod  = NULL;
-	path->path = NULL;
+	newpath = mem_alloc_zpool(sizeof(path_t));
+	if (!newpath) return ERR_ALLOC_FAIL;
 
 	// Find the first ':'
 	typesep = strchr(path_raw, ':');
 	if (!typesep)
 	{
-		error = ERR_PATH_NODISK;
+		error = ERR_PATH_NOPTYPE;
 		goto end;
 	}
 
@@ -56,10 +51,10 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		strbuf = mem_alloc_pool((len + 1) * sizeof(CHAR16));
 		strcpys(strbuf, path_raw, len);
 
-		path->type = str_to_parttype(strbuf);
-		if (path->type == PART_TYPE_UNKNOWN)
+		newpath->type = str_to_parttype(strbuf);
+		if (newpath->type == PART_TYPE_UNKNOWN)
 		{
-			error = ERR_PATH_NODISK;
+			error = ERR_PATH_NOPTYPE;
 			goto end;
 		}
 
@@ -71,8 +66,8 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		len = pathsep - (typesep + 1);
 		if (len > 0)
 		{
-			path->mod = mem_alloc_pool((len + 1) * sizeof(CHAR16));
-			strcpys(path->mod, typesep + 1, len);
+			newpath->mod = mem_alloc_pool((len + 1) * sizeof(CHAR16));
+			strcpys(newpath->mod, typesep + 1, len);
 		}
 	}
 
@@ -81,24 +76,24 @@ error_t path_parse(CHAR16* path_raw, file_path_t** file_path)
 		len = strlen(pathsep + 1);
 		if (len > 0)
 		{
-			path->path = mem_alloc_pool((len + 1) * sizeof(CHAR16));
-			strcpys(path->path, pathsep + 1, len);
+			newpath->path = mem_alloc_pool((len + 1) * sizeof(CHAR16));
+			strcpys(newpath->path, pathsep + 1, len);
 		}
 	}
 
 end:
-	if (error) mem_free_pool(path);
-	else *file_path = path;
+	if (error) mem_free_pool(newpath);
+	else *path = newpath;
 
 	return error;
 }
 
-VOID path_free(file_path_t* file_path)
+VOID path_free(path_t* path)
 {
-	if (file_path)
+	if (path)
 	{
-		mem_free_pool(file_path->mod);
-		mem_free_pool(file_path->path);
-		mem_free_pool(file_path);
+		mem_free_pool(path->mod);
+		mem_free_pool(path->path);
+		mem_free_pool(path);
 	}
 }

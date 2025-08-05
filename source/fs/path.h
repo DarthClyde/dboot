@@ -11,15 +11,15 @@ typedef enum part_type
 	PART_TYPE_GUID
 } part_type_t;
 
-typedef struct file_path
+typedef struct path
 {
 	part_type_t type;
 	CHAR16* mod;
 
 	CHAR16* path;
-} file_path_t;
+} path_t;
 
-error_t path_parse(CHAR16* path_raw, file_path_t** file_path);
-VOID path_free(file_path_t* file_path);
+error_t path_parse(CHAR16* path_raw, path_t** path);
+VOID path_free(path_t* path);
 
 #endif
