@@ -32,8 +32,11 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE* systable)
 	Print(L"\n\n");
 
 	// Load root image
-	error = fs_load_image(image);
+	error = fs_init(image);
 	ERR_CHECK(error, END);
+#ifdef DB_DEBUG
+	part_table_debuglog();
+#endif
 
 	// Load dboot config
 	error = config_load(&config_entries, &config_entries_count, &config_global);

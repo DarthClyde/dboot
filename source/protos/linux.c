@@ -21,7 +21,7 @@ inline static VOID linux_efi_handover(struct boot_params* params)
 
 	// Perform handover
 	handover = (handover_func)(handover_addr);
-	handover(fs_get_image(), ST, params);
+	handover(part_get_boot()->handle, ST, params);
 }
 #endif
 

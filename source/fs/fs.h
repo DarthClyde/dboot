@@ -2,6 +2,7 @@
 #define __FS_FS_H__
 
 #include "hdr.h"
+#include "part.h"
 #include "path.h"
 
 typedef struct file
@@ -10,8 +11,7 @@ typedef struct file
 	EFI_FILE_HANDLE root;
 } file_t;
 
-error_t fs_load_image(EFI_HANDLE image);
-EFI_LOADED_IMAGE* fs_get_image(void);
+error_t fs_init(EFI_HANDLE image);
 
 error_t fs_file_read(file_t* file, UINTN* size, VOID* buffer);
 error_t fs_file_readr(file_t* file, UINTN size, VOID* buffer);
