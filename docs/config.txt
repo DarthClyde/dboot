@@ -2,12 +2,16 @@ DBOOT.CONF Documentation
 --------------------------------------
 
 Terminology:
-  - <ESP> : The EFI partition on your system, usually /boot
-  - entry : A boot option that will appear in the GUI
-  - group : A "folder" that contains multiple entries
+  - <ESP>  : The EFI partition on your system, usually /boot
+  - <path> : A path to a resource; see the 'Paths' section
+  - entry  : A boot option that will appear in the GUI
+  - group  : A "folder" that contains multiple entries
 
 Location:
   The DBOOT configuration file is located at: <ESP>/EFI/DBOOT/DBOOT.CONF
+
+Examples:
+  Configuration file examples are located in the 'examples' directory
 
 
 Structure
@@ -43,6 +47,22 @@ Generic - Can be defined in any boot entry:
            Options: 'linux', or 'group'
 
 Linux - Specific to Linux type entries:
-  - kernel : The path to the kernel bzImage on the <ESP>
-  - module : The path to the initrd / initramfs on the <ESP>
+  - kernel : The <path> to the kernel bzImage on the
+  - module : The <path> to the initrd / initramfs on the
   - cmdline : The command line argmuents that will be passed to the kernel on startup.
+
+
+Paths
+--------------------------------------
+An path is defined by the following format:
+TYPE:MODIFIER/PATH
+
+TYPE - Where the 'PATH' can be found
+  - BOOT : The boot partition where DBOOT is located
+  - GUID : A GPT partition located on any disk
+
+MODIFIER - Depends on 'TYPE'
+  - BOOT : None (leave blank)
+  - GUID : The partition GUID (PARTUUID) of the desired partition
+
+PATH - The actual path to the desired resources

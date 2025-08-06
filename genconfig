@@ -188,12 +188,12 @@ def generate_config():
 			# Write config for kernel
 			f.write(f"[{config_name}]\n")
 			f.write("type = linux\n")
-			f.write(f"kernel = {kernel_name}\n")
+			f.write(f"kernel = BOOT:/{kernel_name}\n")
 
 			# Find and write initrd
 			initrd = scan_initrd(kernel)
 			if(initrd):
-				f.write(f"module = {initrd}\n")
+				f.write(f"module = BOOT:/{initrd}\n")
 				print(f"  Found initrd: {initrd}")
 
 			# Generate and write cmdline
