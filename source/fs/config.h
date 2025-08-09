@@ -11,7 +11,7 @@ typedef enum : UINT8
 	ENTRY_TYPE_LINUX,
 	ENTRY_TYPE_EFI,
 
-	ENTRY_TYPE_GROUP
+	ENTRY_TYPE_GROUP,
 } entry_type_t;
 
 typedef struct config_entry
@@ -24,10 +24,13 @@ typedef struct config_entry
 	// Entry options
 	entry_type_t type;
 
-	// Entry config
+	// Protocol: Linux
 	CHAR16* kernel_path;
 	CHAR16* module_path;
 	CHAR8* cmdline;
+
+	// Protocol: Chainload
+	CHAR16* efi_path;
 } config_entry_t;
 
 typedef struct config_global

@@ -24,3 +24,4 @@ ERR(ERR_PATH_NOPATH, L"Failed to find the file path")
 
 ERR(ERR_BOOT_UNSUPPORTED, L"Unsupported boot protocol")
 ERR(ERR_BOOT_FAIL_LINUX, L"Failed to boot using 'Linux' protocol")
+ERR(ERR_BOOT_FAIL_CHAINLOAD, L"Failed to boot using 'chainload' protocol")

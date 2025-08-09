@@ -3,6 +3,7 @@
 #include <efilib.h>
 
 #include "protos/linux.h"
+#include "protos/chainload.h"
 
 error_t boot_boot(config_entry_t* config)
 {
@@ -39,6 +40,23 @@ error_t boot_boot(config_entry_t* config)
 		}
 
 		case ENTRY_TYPE_EFI:
+		{
+			path_t* efi_path = NULL;
+
+			// Parse EFI app path
+			error = path_parse(config->efi_path, &efi_path);
+			if (error)
+			{
+				ERR_PRINT(error);
+				error = ERR_BOOT_FAIL_CHAINLOAD;
+				break;
+			}
+
+			// Boot into other EFI
+			error = chainload_boot(efi_path);
+			break;
+		}
+
 		case ENTRY_TYPE_GROUP:
 		default:
 		{
