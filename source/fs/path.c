@@ -50,7 +50,9 @@ error_t path_parse(CHAR16* path_raw, path_t** path)
 		len    = typesep - path_raw;
 		strbuf = mem_alloc_pool((len + 1) * sizeof(CHAR16));
 		strcpys(strbuf, path_raw, len);
+		strbuf[len] = '\0';
 
+		// Convert string to struct
 		newpath->type = str_to_parttype(strbuf);
 		if (newpath->type == PART_TYPE_UNKNOWN)
 		{
@@ -68,6 +70,7 @@ error_t path_parse(CHAR16* path_raw, path_t** path)
 		{
 			newpath->mod = mem_alloc_pool((len + 1) * sizeof(CHAR16));
 			strcpys(newpath->mod, typesep + 1, len);
+			newpath->mod[len] = '\0';
 		}
 	}
 
@@ -78,6 +81,7 @@ error_t path_parse(CHAR16* path_raw, path_t** path)
 		{
 			newpath->path = mem_alloc_pool((len + 1) * sizeof(CHAR16));
 			strcpys(newpath->path, pathsep + 1, len);
+			newpath->path[len] = '\0';
 		}
 	}
 

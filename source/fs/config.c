@@ -258,7 +258,7 @@ VOID config_debuglog(config_entry_t* entries, UINTN count)
 			Print(L"  Type: %d:linux\n", type);
 			Print(L"  Kernel: %s\n", entries[i].kernel_path);
 			Print(L"  Module: %s\n", entries[i].module_path);
-			Print(L"  Cmdline: %s\n", entries[i].cmdline);
+			Print(L"  Cmdline: %a\n", entries[i].cmdline);
 		}
 	}
 

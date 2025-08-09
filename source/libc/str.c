@@ -26,7 +26,6 @@ VOID strcpy(CHAR16* dst, CHAR16* src)
 VOID strcpys(CHAR16* dst, CHAR16* src, UINTN len)
 {
 	memcpy(dst, src, len * sizeof(CHAR16));
-	dst[len] = '\0';
 }
 
 UINTN strlen(CHAR16* str)
