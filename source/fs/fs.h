@@ -12,7 +12,9 @@ typedef struct file
 } file_t;
 
 error_t fs_init(EFI_HANDLE image);
+
 error_t fs_setpart(part_type_t type, CHAR16* mod);
+partition_t* fs_getpart(void);
 
 error_t fs_file_read(file_t* file, UINTN* size, VOID* buffer);
 error_t fs_file_readr(file_t* file, UINTN size, VOID* buffer);
