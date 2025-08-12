@@ -44,18 +44,21 @@ Globals - Can be defined only under the globals header:
 
 Generic - Can be defined in any boot entry:
   - type : The type of entry and boot protocol that will be used.
-           Options: 'linux', or 'group'
+           Options: 'linux', 'chainload', or 'group'
 
 Linux - Specific to Linux type entries:
-  - kernel : The <path> to the kernel bzImage on the
-  - module : The <path> to the initrd / initramfs on the
+  - kernel : The <path> to the kernel bzImage.
+  - module : The <path> to the initrd / initramfs.
   - cmdline : The command line argmuents that will be passed to the kernel on startup.
+
+Chainload - Specific to Chainload type entries:
+  - efiapp : The <path> to the EFI application that will be chain loaded.
 
 
 Paths
 --------------------------------------
-An path is defined by the following format:
-TYPE:MODIFIER/PATH
+A path is a location to a resource on the filesystem. It is defined by the following format: TYPE:MODIFIER/PATH
+For example: 'GUID:1234-ABCD-5678/kernels/vmlinuz-linux'
 
 TYPE - Where the 'PATH' can be found
   - BOOT : The boot partition where DBOOT is located
