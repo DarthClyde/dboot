@@ -108,7 +108,7 @@ error_t linux_boot(path_t* kernel_path, path_t* initrd_path, CHAR8* cmdline)
 	setup_header_end = SETUP_SIGNATURE_OFFSET + setup_header_end;
 
 	// Allocate boot params buffer
-	boot_params = AllocateZeroPool(sizeof(struct boot_params));
+	boot_params = mem_alloc_zpool(sizeof(struct boot_params));
 	if (!boot_params)
 	{
 		ERR_PRINT_STR(L"Failed to allocate boot params buffer");

@@ -158,7 +158,7 @@ error_t fs_file_open(CHAR16* path, file_t** file)
 	file_t* newfile   = NULL;
 
 	// Allocate file
-	newfile = AllocateZeroPool(sizeof(file_t));
+	newfile = mem_alloc_zpool(sizeof(file_t));
 	if (!newfile)
 	{
 		error = ERR_ALLOC_FAIL;
