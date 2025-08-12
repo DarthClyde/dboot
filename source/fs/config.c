@@ -213,9 +213,9 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					{
 						current_entry->type = ENTRY_TYPE_LINUX;
 					}
-					else if (memcmp(leql + 1, "efi", 3) == 0)
+					else if (memcmp(leql + 1, "chainload", 9) == 0)
 					{
-						current_entry->type = ENTRY_TYPE_EFI;
+						current_entry->type = ENTRY_TYPE_CHAINLD;
 					}
 				}
 
@@ -239,7 +239,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 						break;
 					}
 
-					case ENTRY_TYPE_EFI:
+					case ENTRY_TYPE_CHAINLD:
 					{
 						// Extract key: efiapp
 						if (memcmp(lstart, "efiapp", 6) == 0)

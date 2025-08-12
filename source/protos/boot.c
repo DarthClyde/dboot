@@ -39,7 +39,7 @@ error_t boot_boot(config_entry_t* config)
 			break;
 		}
 
-		case ENTRY_TYPE_EFI:
+		case ENTRY_TYPE_CHAINLD:
 		{
 			path_t* efi_path = NULL;
 

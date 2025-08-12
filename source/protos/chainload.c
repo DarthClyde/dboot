@@ -26,11 +26,9 @@ error_t chainload_boot(path_t* efi_path)
 	                           0, &efi_handle);
 	if (EFI_ERROR(status))
 	{
-		ERR_PRINT_STR(L"Failed to load the EFI app image: ");
-		Print(L"\b\b%d\n", status);
+		ERR_PRINT_STR(L"Failed to load the EFI app image");
 		goto end;
 	}
-	// mem_free_pool(efi_buf);
 
 	// Leaving so soon :(
 	uefi_call_wrapper(BS->StartImage, 3, efi_handle, NULL, NULL);

@@ -9,7 +9,7 @@
 typedef enum : UINT8
 {
 	ENTRY_TYPE_LINUX,
-	ENTRY_TYPE_EFI,
+	ENTRY_TYPE_CHAINLD,
 
 	ENTRY_TYPE_GROUP,
 } entry_type_t;
