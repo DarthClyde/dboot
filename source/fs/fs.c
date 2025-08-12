@@ -71,6 +71,11 @@ error_t fs_setpart(part_type_t type, CHAR16* mod)
 	return ERR_OK;
 }
 
+partition_t* fs_getpart(void)
+{
+	return s_current_part;
+}
+
 error_t fs_file_read(file_t* file, UINTN* size, VOID* buffer)
 {
 	if (!file) return ERR_FS_FILE_INVALID;

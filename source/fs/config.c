@@ -181,6 +181,7 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 					val_len--;
 				}
 
+				// Extract global keys
 				if (is_global)
 				{
 					// Extract key: default
@@ -197,31 +198,57 @@ error_t config_parse(CHAR8* buffer, UINTN size, config_entry_t** entries, UINTN*
 
 						mem_free_pool(strbuf);
 					}
+
+					goto mov_next;
 				}
-				else
+
+				// Extract key: type
+				if (memcmp(lstart, "type", 4) == 0)
 				{
-					// Extract key: type
-					if (memcmp(lstart, "type", 4) == 0)
+					if (memcmp(leql + 1, "group", 5) == 0)
 					{
-						if (memcmp(leql + 1, "group", 5) == 0)
-							current_entry->type = ENTRY_TYPE_GROUP;
-						else if (memcmp(leql + 1, "linux", 5) == 0)
-							current_entry->type = ENTRY_TYPE_LINUX;
-						else if (memcmp(leql + 1, "efi", 3) == 0)
-							current_entry->type = ENTRY_TYPE_EFI;
+						current_entry->type = ENTRY_TYPE_GROUP;
+					}
+					else if (memcmp(leql + 1, "linux", 5) == 0)
+					{
+						current_entry->type = ENTRY_TYPE_LINUX;
+					}
+					else if (memcmp(leql + 1, "chainload", 9) == 0)
+					{
+						current_entry->type = ENTRY_TYPE_CHAINLD;
+					}
+				}
+
+				// Extract protocol specific keys
+				switch (current_entry->type)
+				{
+					case ENTRY_TYPE_LINUX:
+					{
+						// Extract key: kernel
+						if (memcmp(lstart, "kernel", 6) == 0)
+							EXTRACT_STR(CHAR16, current_entry->kernel_path)
+
+						// Extract key: module
+						else if (memcmp(lstart, "module", 6) == 0)
+							EXTRACT_STR(CHAR16, current_entry->module_path)
+
+						// Extract key: cmdline
+						else if (memcmp(lstart, "cmdline", 7) == 0)
+							EXTRACT_STR(CHAR8, current_entry->cmdline)
+
+						break;
 					}
 
-					// Extract key: kernel
-					else if (memcmp(lstart, "kernel", 6) == 0)
-						EXTRACT_STR(CHAR16, current_entry->kernel_path)
+					case ENTRY_TYPE_CHAINLD:
+					{
+						// Extract key: efiapp
+						if (memcmp(lstart, "efiapp", 6) == 0)
+							EXTRACT_STR(CHAR16, current_entry->efi_path)
 
-					// Extract key: module
-					else if (memcmp(lstart, "module", 6) == 0)
-						EXTRACT_STR(CHAR16, current_entry->module_path)
+						break;
+					}
 
-					// Extract key: cmdline
-					else if (memcmp(lstart, "cmdline", 7) == 0)
-						EXTRACT_STR(CHAR8, current_entry->cmdline)
+					default: break;
 				}
 			}
 		}
