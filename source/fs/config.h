@@ -8,6 +8,8 @@
 
 typedef enum : UINT8
 {
+	ENTRY_TYPE_UNKNOWN = 0,
+
 	ENTRY_TYPE_LINUX,
 	ENTRY_TYPE_CHAINLD,
 
