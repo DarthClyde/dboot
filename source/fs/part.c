@@ -11,7 +11,7 @@ static UINTN s_part_tbl_size          = 0;
 inline static VOID resize_part_tbl(UINTN size)
 {
 	// Allocate new table
-	partition_t* part_tbl = mem_alloc_zpool(size * sizeof(partition_t));
+	partition_t* part_tbl = mem_alloc_pool(size * sizeof(partition_t));
 	if (!part_tbl) return;
 
 	// Copy old data
