@@ -113,7 +113,7 @@ end:
 }
 
 #ifdef DB_DEBUG
-VOID part_table_debuglog(void)
+VOID part_table_debuglog(VOID)
 {
 	if (!s_part_tbl) return;
 
@@ -136,12 +136,12 @@ VOID part_table_debuglog(void)
 }
 #endif
 
-EFI_HANDLE part_get_boot_rawhndl(void)
+EFI_HANDLE part_get_boot_rawhndl(VOID)
 {
 	return s_boot_part_rawhndl;
 }
 
-partition_t* part_get_boot(void)
+partition_t* part_get_boot(VOID)
 {
 	return s_boot_part;
 }

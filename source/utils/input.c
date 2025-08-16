@@ -12,7 +12,7 @@ key_t input_wait_for_keypress(UINT64 timeout)
 	return KEY(key.ScanCode, key.UnicodeChar);
 }
 
-key_t input_get_keypress(void)
+key_t input_get_keypress(VOID)
 {
 	EFI_INPUT_KEY key = {};
 	uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 1, ST->ConIn, &key);

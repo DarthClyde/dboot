@@ -7,13 +7,13 @@ static EFI_GRAPHICS_OUTPUT_PROTOCOL* s_gop              = NULL;
 static EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* s_gop_info = NULL;
 static UINTN s_gop_info_size                            = 0;
 
-error_t gop_init(void)
+error_t gop_init(VOID)
 {
 	EFI_STATUS status = EFI_SUCCESS;
 	EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 	// Get the GOP protocol
-	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (void**)&s_gop);
+	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gop_guid, NULL, (VOID**)&s_gop);
 	if (EFI_ERROR(status)) return ERR_VID_GOP_LOCATE;
 
 	// Query the GOP mode info
@@ -27,7 +27,7 @@ error_t gop_init(void)
 	return ERR_OK;
 }
 
-BOOLEAN gop_isactive(void)
+BOOLEAN gop_isactive(VOID)
 {
 	return s_gop != NULL;
 }

@@ -161,7 +161,7 @@ struct olpc_ofw_header
 
 struct edid_info
 {
-	unsigned char dummy[128];
+	CHAR8 dummy[128];
 };
 
 struct efi_info

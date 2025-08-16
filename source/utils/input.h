@@ -10,7 +10,7 @@ typedef UINT64 key_t;
 #define KEY_UNICODE(PACKED)  ((CHAR16)((PACKED) & 0xFFFF))
 
 key_t input_wait_for_keypress(UINT64 timeout);
-key_t input_get_keypress(void);
+key_t input_get_keypress(VOID);
 BOOLEAN input_is_key_pressed(key_t key);
 
 #endif

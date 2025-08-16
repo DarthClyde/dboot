@@ -45,7 +45,7 @@ static UINT16 s_footer_strlen    = 0;
 
 static INT64 s_boot_timeout      = 0;
 
-inline static VOID draw_static_elements(void)
+inline static VOID draw_static_elements(VOID)
 {
 	// Draw header
 	static UINT16 header_str[] = L"dboot " DB_VERSION;

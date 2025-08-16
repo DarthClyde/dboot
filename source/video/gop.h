@@ -3,8 +3,8 @@
 
 #include "hdr.h"
 
-error_t gop_init(void);
-BOOLEAN gop_isactive(void);
+error_t gop_init(VOID);
+BOOLEAN gop_isactive(VOID);
 
 VOID gop_print(CHAR16* fmt, ...);
 VOID gop_printp(UINTN x, UINTN y, CHAR16* fmt, ...);

@@ -71,7 +71,7 @@ error_t fs_setpart(part_type_t type, CHAR16* mod)
 	return ERR_OK;
 }
 
-partition_t* fs_getpart(void)
+partition_t* fs_getpart(VOID)
 {
 	return s_current_part;
 }
@@ -118,7 +118,7 @@ error_t fs_file_readall(file_t* file, VOID** buffer, UINTN* size)
 	}
 
 	// Read file content
-	status = uefi_call_wrapper(file->handle->Read, 3, file->handle, &(*size), *buffer);
+	status = uefi_call_wrapper(file->handle->Read, 3, file->handle, size, *buffer);
 	if (EFI_ERROR(status)) error = ERR_FS_FILE_READ;
 
 end:

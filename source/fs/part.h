@@ -16,11 +16,11 @@ typedef struct partition
 
 error_t part_init(EFI_HANDLE bootpart);
 #ifdef DB_DEBUG
-VOID part_table_debuglog(void);
+VOID part_table_debuglog(VOID);
 #endif
 
-partition_t* part_get_boot(void);
-EFI_HANDLE part_get_boot_rawhndl(void);
+partition_t* part_get_boot(VOID);
+EFI_HANDLE part_get_boot_rawhndl(VOID);
 
 partition_t* part_get_from_guid(CHAR16* guid);
 partition_t* part_get_from_hndl(EFI_HANDLE hndl);
