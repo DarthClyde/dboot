@@ -93,6 +93,8 @@ error_t part_init(EFI_HANDLE bootpart)
 	}
 
 end:
+	if (!s_boot_part) Print(L"Warning: failed to build partition table\n");
+
 	// Find boot partition
 	s_boot_part = part_get_from_hndl(bootimg->DeviceHandle);
 	if (!s_boot_part)
